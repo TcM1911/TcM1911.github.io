@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="Joakim Kennedy">
+    <meta name="description" content="My space where I share my thoughts">
+    <meta name="keywords" content="blog,developer,hacks,security,malware">
+
+    <base href="https://tcm1911.github.io">
+    <title>
+  Create YARA Rules With Radare · cat /dev/mem
+</title>
+
+    <link rel="canonical" href="https://tcm1911.github.io/posts/create-yara-rules-with-radare/">
+
+    <link  rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Mono:400,700">
+    <link rel="stylesheet" href="//cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
+    <link rel="stylesheet" href="https://tcm1911.github.io/css/style.min.css">
+
+    <link rel="icon" type="image/png" href="https://tcm1911.github.io/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://tcm1911.github.io/images/favicon-16x16.png" sizes="16x16">
+
+    
+
+    <meta name="generator" content="Hugo 0.41" />
+  </head>
+
+  <body>
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://tcm1911.github.io/">
+      cat /dev/mem
+    </a>
+    
+    <ul class="navigation-list float-right">
+      
+      <li class="navigation-item">
+        <a class="navigation-link" href="/posts/">Blog</a>
+      </li>
+      
+    </ul>
+    
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+  <article>
+    <header>
+      <h1 class="title">Create YARA Rules With Radare</h1>
+      <h2 class="date">June 9, 2018</h2>
+    </header>
+
+    
+
+<h1 id="introduction">Introduction</h1>
+
+<p>This post is showing how Radare’s Zignatures can be used to create YARA rules.
+The YARA rules generated can be used to find other malware samples that have the
+same or similar code.</p>
+
+<h2 id="yara">Yara</h2>
+
+<p>YARA was created by Victor Alvarez of Virustotal and is a tool used by malware
+researchers to identify and classify samples. YARA rules consist of string or
+byte patterns together with set conditions. When the conditions are met, a match
+is found. Below is an example rule:</p>
+
+<pre><code>rule silent_banker : banker
+
+{
+    meta:
+        description = &quot;This is just an example&quot;
+        thread_level = 3
+        in_the_wild = true
+
+    strings:
+        $a = {6A 40 68 00 30 00 00 6A 14 8D 91}
+        $b = {8D 4D B0 2B C1 83 C0 27 99 6A 4E 59 F7 F9}
+        $c = &quot;UVODFRYSIHLNWPEJXQZAKCBGMT&quot;
+
+    condition:
+        $a or $b or $c
+}
+</code></pre>
+
+<p>A match for this rule if either $a, $b, or $c are found in a file.</p>
+
+<h2 id="radare-s-zignatures">Radare’s Zignatures</h2>
+
+<p>Zignatures is Radare’s own signature format. It can be used to find code reuse
+in different binaries. The command to create a signature for a function is:
+<code>zaf offset|name signature_name</code>. An example from the Rader2 Book is shown below:</p>
+
+<pre><code>r2 /bin/ls
+[0x000051c0]&gt; aaa # this creates functions, including 'entry0'
+[0x000051c0]&gt; zaf entry0 entry
+[0x000051c0]&gt; z
+entry:
+    bytes: 31ed4989d15e4889e24883e4f050544c............48............48............ff..........f4
+    graph: cc=1 nbbs=1 edges=0 ebbs=1
+    offset: 0x000051c0
+[0x000051c0]&gt;
+</code></pre>
+
+<p>The signature includes the functions offset, graph information, and the bytes
+information. The bytes are the function’s instructions with the location bits
+reduced to <code>..</code>. This is similar to YARA’s wildcard byte <code>??</code>.</p>
+
+<h1 id="zig2yar-tool">Zig2Yar tool</h1>
+
+<p>Zig2Yar uses Radare2 to generate a Zignature which is converted to a YARA
+hex-string. The tool can be run from within Radare or from the command line. The
+tool is written in Go and requires Radare to be installed. With a Go build
+environment setup, it can be built using the command:</p>
+
+<pre><code>go build -u -o zig2yar github.com/TcM1911/zig2yar
+</code></pre>
+
+<p>To use Zig2Yar from with Radare:</p>
+
+<ul>
+<li>Seek to the function you want to generate a YARA hex-string for.</li>
+<li>Type: <code>!pipe /path/to/zig2yar</code></li>
+<li>Copy the output to the YARA rule.</li>
+</ul>
+
+<p>If you use it from the command line, you need to provide the offset for the
+function via the <code>-o</code> flag. For example:</p>
+
+<pre><code>$ zig2yar -o 0x1000043f1 /bin/ls
+</code></pre>
+
+<p>You can make the string shorter by using the <code>-r</code> flag. It replaces the wildcard
+symbols for [#] instead. For example <code>{ ?? ?? ?? ?? ?? ?? }</code> is replaced with
+<code>{ [6] }</code>.</p>
+
+<p>The rules can be made less strict by providing a multiplier via the <code>-s</code> flag.
+For example <code>-s 1.5</code> will replace <code>{ ?? ?? ?? ?? ?? ?? }</code> with <code>{ [6-9] }</code>.</p>
+
+<h1 id="links">Links</h1>
+
+<ul>
+<li><a href="https://virustotal.github.io/yara/">https://virustotal.github.io/yara/</a></li>
+<li><a href="https://radare.gitbooks.io/radare2book/content/signatures/zignatures.html">https://radare.gitbooks.io/radare2book/content/signatures/zignatures.html</a></li>
+<li><a href="http://radare.today/posts/zignatures/">http://radare.today/posts/zignatures/</a></li>
+<li><a href="https://github.com/TcM1911/zig2yar">https://github.com/TcM1911/zig2yar</a></li>
+</ul>
+
+  </article>
+</section>
+
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    © 2018 · Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+  </section>
+</footer>
+
+    </main>
+
+    
+
+  </body>
+
+</html>

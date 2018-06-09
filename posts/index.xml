@@ -6,10 +6,20 @@
     <description>Recent content in Posts on cat /dev/mem</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 30 Apr 2018 10:59:00 +0100</lastBuildDate>
+    <lastBuildDate>Sat, 09 Jun 2018 20:37:47 +0000</lastBuildDate>
     
 	<atom:link href="https://tcm1911.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Create YARA Rules With Radare</title>
+      <link>https://tcm1911.github.io/posts/create-yara-rules-with-radare/</link>
+      <pubDate>Sat, 09 Jun 2018 20:37:47 +0000</pubDate>
+      
+      <guid>https://tcm1911.github.io/posts/create-yara-rules-with-radare/</guid>
+      <description>Introduction This post is showing how Radare’s Zignatures can be used to create YARA rules. The YARA rules generated can be used to find other malware samples that have the same or similar code.
+Yara YARA was created by Victor Alvarez of Virustotal and is a tool used by malware researchers to identify and classify samples. YARA rules consist of string or byte patterns together with set conditions. When the conditions are met, a match is found.</description>
+    </item>
     
     <item>
       <title>Malware Analysis using Malboxes</title>
