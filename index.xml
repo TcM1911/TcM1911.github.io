@@ -17,7 +17,7 @@
       <pubDate>Sat, 01 Sep 2018 00:00:00 +0000</pubDate>
       
       <guid>https://tcm1911.github.io/posts/whois-and-finger-reverse-shell/</guid>
-      <description>Introduction In the presentation Fire &amp;amp; Ice: Making and Breaking macOS Firewalls Patrick Wardle mentioned the idea of using binaries signed by Apple to by-pass firewall checks for outbound traffic. As an example, he mentioned whois. I thought it would be interesting to throw together a one-liner reverse shell that uses whois to do the socket handling. In addition to whois, what other system utilities can be used.
+      <description>Introduction In the presentation Fire &amp;amp; Ice: Making and Breaking macOS Firewalls, Patrick Wardle mentioned the idea of using binaries signed by Apple to by-pass firewall checks for outbound traffic. As an example, he mentioned whois. I thought it would be interesting to throw together a one-liner reverse shell that uses whois to do the socket handling. In addition to whois, what other system utilities can be used.
 The Whois protocol The whois protocol is very simple TCP-based query/response protocol.</description>
     </item>
     
