@@ -2,41 +2,51 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>cat /dev/mem</title>
-    <link>https://tcm1911.github.io/</link>
+    <link>/</link>
     <description>Recent content on cat /dev/mem</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 01 Sep 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 17 Mar 2019 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="https://tcm1911.github.io/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
+      <title>Backdoor on windows with finger</title>
+      <link>/posts/finger-windows-backdoor/</link>
+      <pubDate>Sun, 17 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/finger-windows-backdoor/</guid>
+      <description>Introduction This is a follow-up post to one of my presentations at BsidesSF 2019. It is also a continuation of a previous blog post where it showed how you can use WHOIS and Finger on Unix systems for backdoors. In this post, the focus will be on how it can similarly be done on a Windows system.
+Finger comes pre-installed on Windows. According to Microsoft&amp;rsquo;s documentation, the options are very limited.</description>
+    </item>
+    
+    <item>
       <title>Using Whois and Finger for reverse shells</title>
-      <link>https://tcm1911.github.io/posts/whois-and-finger-reverse-shell/</link>
+      <link>/posts/whois-and-finger-reverse-shell/</link>
       <pubDate>Sat, 01 Sep 2018 00:00:00 +0000</pubDate>
       
-      <guid>https://tcm1911.github.io/posts/whois-and-finger-reverse-shell/</guid>
+      <guid>/posts/whois-and-finger-reverse-shell/</guid>
       <description>Introduction In the presentation Fire &amp;amp; Ice: Making and Breaking macOS Firewalls, Patrick Wardle mentioned the idea of using binaries signed by Apple to by-pass firewall checks for outbound traffic. As an example, he mentioned whois. I thought it would be interesting to throw together a one-liner reverse shell that uses whois to do the socket handling. In addition to whois, what other system utilities can be used.
 The Whois protocol The whois protocol is very simple TCP-based query/response protocol.</description>
     </item>
     
     <item>
       <title>Create YARA Rules With Radare</title>
-      <link>https://tcm1911.github.io/posts/create-yara-rules-with-radare/</link>
+      <link>/posts/create-yara-rules-with-radare/</link>
       <pubDate>Sat, 09 Jun 2018 20:37:47 +0000</pubDate>
       
-      <guid>https://tcm1911.github.io/posts/create-yara-rules-with-radare/</guid>
+      <guid>/posts/create-yara-rules-with-radare/</guid>
       <description>Introduction This post is showing how Radare’s Zignatures can be used to create YARA rules. The YARA rules generated can be used to find other malware samples that have the same or similar code.
 Yara YARA was created by Victor Alvarez of Virustotal and is a tool used by malware researchers to identify and classify samples. YARA rules consist of string or byte patterns together with set conditions. When the conditions are met, a match is found.</description>
     </item>
     
     <item>
       <title>Malware Analysis using Malboxes</title>
-      <link>https://tcm1911.github.io/posts/malware-analysis-using-malboxes/</link>
+      <link>/posts/malware-analysis-using-malboxes/</link>
       <pubDate>Mon, 30 Apr 2018 10:59:00 +0100</pubDate>
       
-      <guid>https://tcm1911.github.io/posts/malware-analysis-using-malboxes/</guid>
+      <guid>/posts/malware-analysis-using-malboxes/</guid>
       <description>A while back I came across two projects that automate the creation of virtual machines for malware analysis. The original open source project what uses Packer and Vagrant to bootstrap a malware lab can be found here. As part of this blog post, I will instead use malboxes from GoSecure as it suits my need more.
 Malboxes creates a Windows VM template using packer. The template will have tools installed.</description>
     </item>

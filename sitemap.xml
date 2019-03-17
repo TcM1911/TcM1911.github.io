@@ -3,39 +3,44 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>https://tcm1911.github.io/posts/whois-and-finger-reverse-shell/</loc>
+    <loc>/posts/finger-windows-backdoor/</loc>
+    <lastmod>2019-03-17T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/posts/whois-and-finger-reverse-shell/</loc>
     <lastmod>2018-09-01T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>https://tcm1911.github.io/posts/create-yara-rules-with-radare/</loc>
+    <loc>/posts/create-yara-rules-with-radare/</loc>
     <lastmod>2018-06-09T20:37:47+00:00</lastmod>
   </url>
   
   <url>
-    <loc>https://tcm1911.github.io/posts/malware-analysis-using-malboxes/</loc>
+    <loc>/posts/malware-analysis-using-malboxes/</loc>
     <lastmod>2018-04-30T10:59:00+01:00</lastmod>
   </url>
   
   <url>
-    <loc>https://tcm1911.github.io/categories/</loc>
+    <loc>/categories/</loc>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://tcm1911.github.io/posts/</loc>
-    <lastmod>2018-09-01T00:00:00+00:00</lastmod>
+    <loc>/posts/</loc>
+    <lastmod>2019-03-17T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://tcm1911.github.io/tags/</loc>
+    <loc>/tags/</loc>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://tcm1911.github.io/</loc>
-    <lastmod>2018-09-01T00:00:00+00:00</lastmod>
+    <loc>/</loc>
+    <lastmod>2019-03-17T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
