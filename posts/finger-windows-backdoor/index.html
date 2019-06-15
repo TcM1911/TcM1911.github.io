@@ -1,49 +1,82 @@
 <!DOCTYPE html>
-<html lang="en-us">
+<html lang="en">
 
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <meta name="author" content="Joakim Kennedy">
-    <meta name="description" content="My space where I share my thoughts">
+    <meta name="description" content="A place I share my thoughts and play with stuff">
     <meta name="keywords" content="blog,developer,hacks,security,malware">
 
-    <base href="">
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Backdoor on windows with finger"/>
+<meta name="twitter:description" content="Introduction This is a follow-up post to one of my presentations at BsidesSF 2019. It is also a continuation of a previous blog post where it showed how you can use WHOIS and Finger on Unix systems for backdoors. In this post, the focus will be on how it can similarly be done on a Windows system.
+Finger comes pre-installed on Windows. According to Microsoft&rsquo;s documentation, the options are very limited."/>
+
+    <meta property="og:title" content="Backdoor on windows with finger" />
+<meta property="og:description" content="Introduction This is a follow-up post to one of my presentations at BsidesSF 2019. It is also a continuation of a previous blog post where it showed how you can use WHOIS and Finger on Unix systems for backdoors. In this post, the focus will be on how it can similarly be done on a Windows system.
+Finger comes pre-installed on Windows. According to Microsoft&rsquo;s documentation, the options are very limited." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/posts/finger-windows-backdoor/" />
+<meta property="article:published_time" content="2019-03-17T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-03-17T00:00:00&#43;00:00"/>
+
+
+    
+      <base href="../../posts/finger-windows-backdoor/">
+    
     <title>
-  Backdoor on windows with finger · cat /dev/mem
+  Backdoor on windows with finger · Playhouse
 </title>
 
-    <link rel="canonical" href="../../posts/finger-windows-backdoor/">
+    
+      <link rel="canonical" href="../../posts/finger-windows-backdoor/">
+    
 
-    <link  rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Mono:400,700">
-    <link rel="stylesheet" href="//cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
-    <link rel="stylesheet" href="../../css/style.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700%7CMerriweather:300,700%7CSource+Code+Pro:400,700" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous" />
 
-    <link rel="icon" type="image/png" href="../../images/favicon-32x32.png" sizes="32x32">
-    <link rel="icon" type="image/png" href="../../images/favicon-16x16.png" sizes="16x16">
+    
+      
+      
+      <link rel="stylesheet" href="../../css/coder.min.28d751104f30c16da1aa1bb04015cbe662cacfe0d1b01af4f2240ad58580069c.css" integrity="sha256-KNdREE8wwW2hqhuwQBXL5mLKz&#43;DRsBr08iQK1YWABpw=" crossorigin="anonymous" media="screen" />
+    
 
     
 
-    <meta name="generator" content="Hugo 0.54.0" />
+    
+
+    
+
+    
+    
+    <link rel="icon" type="image/png" href="../../images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="../../images/favicon-16x16.png" sizes="16x16">
+
+    <meta name="generator" content="Hugo 0.55.6" />
   </head>
 
-  <body>
+  <body class=" ">
     <main class="wrapper">
       <nav class="navigation">
   <section class="container">
     <a class="navigation-title" href="../../">
-      cat /dev/mem
+      Playhouse
     </a>
-    
-    <ul class="navigation-list float-right">
+    <input type="checkbox" id="menu-toggle" />
+    <label class="menu-button float-right" for="menu-toggle"><i class="fas fa-bars"></i></label>
+    <ul class="navigation-list">
       
-      <li class="navigation-item">
-        <a class="navigation-link" href="../../posts/">Blog</a>
-      </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="../../posts/">Blog</a>
+          </li>
+        
+      
       
     </ul>
-    
   </section>
 </nav>
 
@@ -51,13 +84,31 @@
       <div class="content">
         
   <section class="container post">
-  <article>
-    <header>
-      <h1 class="title">Backdoor on windows with finger</h1>
-      <h2 class="date">March 17, 2019</h2>
-    </header>
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">Backdoor on windows with finger</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fas fa-calendar"></i>
+              <time datetime='2019-03-17T00:00:00Z'>
+                March 17, 2019
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fas fa-clock"></i>
+              3 minutes read
+            </span>
+          </div>
+          
+          
+        </div>
+      </header>
 
-    
+      <div>
+        
 
 <h1 id="introduction">Introduction</h1>
 
@@ -139,15 +190,29 @@ execute commands. The image below shows the macro.</p>
 
 <p><img src="../../images/finger-vt-results.png" alt="VT scanning results" /></p>
 
-  </article>
-</section>
+      </div>
 
+      <footer>
+        
+
+
+        
+      </footer>
+    </article>
+
+    
+  </section>
 
       </div>
 
       <footer class="footer">
   <section class="container">
-    © 2019 · Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+    
+      <p>All rights reserved</p>
+    
+     © 2019
+    
+    
   </section>
 </footer>
 
