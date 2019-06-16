@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>reverse_engineering on Playhouse</title>
+    <link>/tags/reverse_engineering/</link>
+    <description>Recent content in reverse_engineering on Playhouse</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 16 Jun 2019 00:00:00 +0100</lastBuildDate>
+    
+	<atom:link href="/tags/reverse_engineering/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Say Hello to Moduledata</title>
+      <link>/posts/hello-moduledata/</link>
+      <pubDate>Sun, 16 Jun 2019 00:00:00 +0100</pubDate>
+      
+      <guid>/posts/hello-moduledata/</guid>
+      <description>Say Hello to Moduledata The moduledata structure is a data table that was first introduced in version 1.5 of Go. It is a structure that holds important information that is needed when you statically analyzing Go binaries. It records information about the layout of the executable. For ELF binaries, the structure can be found in the .noptrdata section. In PE files it is much harder to find. Sometimes it is located in the .</description>
+    </item>
+    
+    <item>
+      <title>Malware Analysis using Malboxes</title>
+      <link>/posts/malware-analysis-using-malboxes/</link>
+      <pubDate>Mon, 30 Apr 2018 10:59:00 +0100</pubDate>
+      
+      <guid>/posts/malware-analysis-using-malboxes/</guid>
+      <description>A while back I came across two projects that automate the creation of virtual machines for malware analysis. The original open source project what uses Packer and Vagrant to bootstrap a malware lab can be found here. As part of this blog post, I will instead use malboxes from GoSecure as it suits my need more.
+Malboxes creates a Windows VM template using packer. The template will have tools installed.</description>
+    </item>
+    
+  </channel>
+</rss>

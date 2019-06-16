@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>red_team on Playhouse</title>
+    <link>/tags/red_team/</link>
+    <description>Recent content in red_team on Playhouse</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 17 Mar 2019 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/red_team/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Backdoor on windows with finger</title>
+      <link>/posts/finger-windows-backdoor/</link>
+      <pubDate>Sun, 17 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/finger-windows-backdoor/</guid>
+      <description>Introduction This is a follow-up post to one of my presentations at BsidesSF 2019. It is also a continuation of a previous blog post where it showed how you can use WHOIS and Finger on Unix systems for backdoors. In this post, the focus will be on how it can similarly be done on a Windows system.
+Finger comes pre-installed on Windows. According to Microsoft&amp;rsquo;s documentation, the options are very limited.</description>
+    </item>
+    
+    <item>
+      <title>Using Whois and Finger for reverse shells</title>
+      <link>/posts/whois-and-finger-reverse-shell/</link>
+      <pubDate>Sat, 01 Sep 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/whois-and-finger-reverse-shell/</guid>
+      <description>Introduction In the presentation Fire &amp;amp; Ice: Making and Breaking macOS Firewalls, Patrick Wardle mentioned the idea of using binaries signed by Apple to by-pass firewall checks for outbound traffic. As an example, he mentioned whois. I thought it would be interesting to throw together a one-liner reverse shell that uses whois to do the socket handling. In addition to whois, what other system utilities can be used.
+The Whois protocol The whois protocol is very simple TCP-based query/response protocol.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -6,10 +6,19 @@
     <description>Recent content in Posts on Playhouse</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 17 Mar 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 16 Jun 2019 00:00:00 +0100</lastBuildDate>
     
 	<atom:link href="/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Say Hello to Moduledata</title>
+      <link>/posts/hello-moduledata/</link>
+      <pubDate>Sun, 16 Jun 2019 00:00:00 +0100</pubDate>
+      
+      <guid>/posts/hello-moduledata/</guid>
+      <description>Say Hello to Moduledata The moduledata structure is a data table that was first introduced in version 1.5 of Go. It is a structure that holds important information that is needed when you statically analyzing Go binaries. It records information about the layout of the executable. For ELF binaries, the structure can be found in the .noptrdata section. In PE files it is much harder to find. Sometimes it is located in the .</description>
+    </item>
     
     <item>
       <title>Backdoor on windows with finger</title>

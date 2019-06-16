@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="Joakim Kennedy">
+    <meta name="description" content="A place I share my thoughts and play with stuff">
+    <meta name="keywords" content="blog,developer,hacks,security,malware">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Say Hello to Moduledata"/>
+<meta name="twitter:description" content="An introduction to the moduledate structure. An important data structure for Go binary analysis"/>
+
+    <meta property="og:title" content="Say Hello to Moduledata" />
+<meta property="og:description" content="An introduction to the moduledate structure. An important data structure for Go binary analysis" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/posts/hello-moduledata/" />
+<meta property="article:published_time" content="2019-06-16T00:00:00&#43;01:00"/>
+<meta property="article:modified_time" content="2019-06-16T00:00:00&#43;01:00"/>
+
+
+    
+      <base href="../../posts/hello-moduledata/">
+    
+    <title>
+  Say Hello to Moduledata · Playhouse
+</title>
+
+    
+      <link rel="canonical" href="../../posts/hello-moduledata/">
+    
+
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700%7CMerriweather:300,700%7CSource+Code+Pro:400,700" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous" />
+
+    
+      
+      
+      <link rel="stylesheet" href="../../css/coder.min.28d751104f30c16da1aa1bb04015cbe662cacfe0d1b01af4f2240ad58580069c.css" integrity="sha256-KNdREE8wwW2hqhuwQBXL5mLKz&#43;DRsBr08iQK1YWABpw=" crossorigin="anonymous" media="screen" />
+    
+
+    
+
+    
+
+    
+
+    
+    
+    <link rel="icon" type="image/png" href="../../images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="../../images/favicon-16x16.png" sizes="16x16">
+
+    <meta name="generator" content="Hugo 0.55.6" />
+  </head>
+
+  <body class=" ">
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="../../">
+      Playhouse
+    </a>
+    <input type="checkbox" id="menu-toggle" />
+    <label class="menu-button float-right" for="menu-toggle"><i class="fas fa-bars"></i></label>
+    <ul class="navigation-list">
+      
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="../../posts/">Blog</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://go-re.tk">Go Reverse Engineering Tool Kit</a>
+          </li>
+        
+      
+      
+    </ul>
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">Say Hello to Moduledata</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fas fa-calendar"></i>
+              <time datetime='2019-06-16T00:00:00&#43;01:00'>
+                June 16, 2019
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fas fa-clock"></i>
+              6 minutes read
+            </span>
+          </div>
+          
+          <div class="tags">
+  <i class="fas fa-tag"></i>
+    <a href="../../tags/go/">go</a>
+      <span class="separator">•</span>
+    <a href="../../tags/reverse_engineering/">reverse_engineering</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+
+<h1 id="say-hello-to-moduledata">Say Hello to Moduledata</h1>
+
+<p>The <em>moduledata</em> structure is a data table that was first introduced in version
+<em>1.5</em> of Go. It is a structure that holds important information that is needed
+when you statically analyzing Go binaries. It records information about the
+layout of the executable. For ELF binaries, the structure can be found in the
+<code>.noptrdata</code> section. In PE files it is much harder to find. Sometimes it is
+located in the <code>.text</code> section and sometimes it is in the <code>.data</code> section. If
+the binary has been stripped there is no symbol pointing to the structure. In
+these scenarios, a brute-force search is needed. To know what we should search
+for, we need first know what the structure looks like.</p>
+
+<h2 id="the-structure">The structure</h2>
+
+<p>The structure that was added in version <em>1.5</em> is shown below. It is defined
+in the <em>symtab.go</em> file in the runtime package. It holds many good entries
+that can be used when analyzing Go binaries.</p>
+
+<pre><code class="language-go">type moduledata struct {
+	pclntable    []byte
+	ftab         []functab
+	filetab      []uint32
+	findfunctab  uintptr
+	minpc, maxpc uintptr
+
+	text, etext           uintptr
+	noptrdata, enoptrdata uintptr
+	data, edata           uintptr
+	bss, ebss             uintptr
+	noptrbss, enoptrbss   uintptr
+	end, gcdata, gcbss    uintptr
+
+	typelinks []*_type
+
+	modulename   string
+	modulehashes []modulehash
+
+	gcdatamask, gcbssmask bitvector
+
+	next *moduledata
+}
+</code></pre>
+
+<p>The first entry in the structure is the <code>pclntable</code>. This table holds mappings
+between source code line numbers and the program counter. The reason for this
+table is to be able to produce meaning full stack traces during a panic. The
+table is not removed if the binary is stripped and if debugging information is
+removed. Since it holds information that maps back to the source code file,
+this table can be a gold mine for malware analysts. The information includes
+the full file path and name of the source file at compile time and name of the
+function. Also using the program counter to source code line number mapping, it
+is possible to estimate the source code lines of the functions. Since this
+table holds a lot of information, it is one of the big contributors to the
+large file size of Go binaries, particularly in larger applications.</p>
+
+<p>The next entry in the structure is the <code>ftab</code>, short for function table. The
+<code>functab</code> structure is shown below. One of its usages is in the runtime
+package.  The table is used to determine which function is currently being
+executed. This table is used if the runtime function <code>FuncForPC</code> is called. The
+function takes a value for the program counter and returns a function
+representation of that subroutine. Using that function representation, the
+filename and line number can be determined when given a program counter.</p>
+
+<pre><code class="language-go">type functab struct {
+	entry   uintptr
+	funcoff uintptr
+}
+</code></pre>
+
+<p>The <em>moduledata</em> structure also holds pointers to the beginning and the end of
+useful data areas. For example the beginning and end of the program counter and
+other sections. When analyzing ELF binaries, most of these values are easily
+found because they correspond to ELF sections. This data is more important when
+analyzing PE files because the areas are not marked as sections. Instead, they
+are located in either the <code>.text</code> section or the <code>.data</code> section.</p>
+
+<p>The last entry of interest is the <code>typelinks</code>. This slice holds pointers to the
+internal descriptions for types in the binary. These <em>types</em> structures hold
+information for all types, included user defined and internal primitives. By
+parsing this list it is possible to recover type information.</p>
+
+<h3 id="1-7-changes">1.7 changes</h3>
+
+<p>With the release of <em>1.7</em>, the <em>moduledata</em> structure was changed. The
+structure is shown below. A new &ldquo;section&rdquo; was added called <em>types</em> and instead
+of the <code>typelinks</code> being a slice of pointers to <code>_type</code> structures, it is a
+slice of 32-bit integers that are offsets from the beginning of the <code>types</code>
+section where the structure is located. A table was also added for interfaces
+called <code>itablinks</code>.</p>
+
+<pre><code class="language-go">type moduledata struct {
+	pclntable    []byte
+	ftab         []functab
+	filetab      []uint32
+	findfunctab  uintptr
+	minpc, maxpc uintptr
+
+	text, etext           uintptr
+	noptrdata, enoptrdata uintptr
+	data, edata           uintptr
+	bss, ebss             uintptr
+	noptrbss, enoptrbss   uintptr
+	end, gcdata, gcbss    uintptr
+	types, etypes         uintptr
+
+	typelinks []int32 // offsets from types
+	itablinks []*itab
+
+	modulename   string
+	modulehashes []modulehash
+
+	gcdatamask, gcbssmask bitvector
+
+	typemap map[typeOff]*_type // offset to *_rtype in previous module
+
+	next *moduledata
+}
+</code></pre>
+
+<h3 id="current-format">Current format</h3>
+
+<p>The current format of the <em>moduledata</em> was introduced in version <em>1.8</em>. The
+main changes to the structure that was added were to support the plugin
+functionality. The structure is shown below.</p>
+
+<pre><code class="language-go">type moduledata struct {
+	pclntable    []byte
+	ftab         []functab
+	filetab      []uint32
+	findfunctab  uintptr
+	minpc, maxpc uintptr
+
+	text, etext           uintptr
+	noptrdata, enoptrdata uintptr
+	data, edata           uintptr
+	bss, ebss             uintptr
+	noptrbss, enoptrbss   uintptr
+	end, gcdata, gcbss    uintptr
+	types, etypes         uintptr
+
+	textsectmap []textsect
+	typelinks   []int32 // offsets from types
+	itablinks   []*itab
+
+	ptab []ptabEntry
+
+	pluginpath string
+	pkghashes  []modulehash
+
+	modulename   string
+	modulehashes []modulehash
+
+	hasmain uint8 // 1 if module contains the main function, 0 otherwise
+
+	gcdatamask, gcbssmask bitvector
+
+	typemap map[typeOff]*_type // offset to *_rtype in previous module
+
+	bad bool // module failed to load and should be ignored
+
+	next *moduledata
+}
+</code></pre>
+
+<h2 id="how-to-find-the-moduledata">How to find the moduledata</h2>
+
+<p>It is easiest to find the <em>moduledata</em> structure in ELF binaries. Because it is
+not found at a predetermined offset, has its own section, or a symbol it needs
+to to be searched for. It is located in the <code>.noptrdata</code> section and since this
+has its own section in an ELF binary, the search scope can be limited to this
+section only. One way of finding it is to search for known offsets that should
+be in the data structure. For example, the address of the <code>pclntable</code> can be
+used. If a match is found, the location is a good candidate for the beginning
+of the structure since the address to the <code>pclntable</code> is the first entry in the
+<em>moduledata</em> structure. Since the <code>pclntable</code> is its own section on ELF binaries,
+the address of it is easy to extract. The match can be verified by checking for
+other known address in the candidate. For example, the addresses for the <code>.text</code>
+and <code>.data</code> sections can be used.</p>
+
+<p>The process for PE files is slightly harder. For starters, the <code>.noptrdata</code>
+area is not located in its own section. Secondly, neither is the <code>pclntable</code>.
+Consequently, are rather brute-force method is required. Luckily, the
+<code>pclntable</code> has a header with a starting set of magic bytes. This can be used
+to search for the table. Once it has been found, the address of this header can
+be used to find the <em>moduledata</em> structure in either the <code>.text</code> or <code>.data</code>
+section using the same process as in ELF binaries.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The <em>moduledata</em> structure holds information about the layout of the
+executable.  It can be somewhat hard to find this data structure. Once it has
+been found, it can be used to analyze the Go binary file better. This also
+includes recovering type information.</p>
+
+      </div>
+
+      <footer>
+        
+
+
+        
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    
+      <p>All rights reserved</p>
+    
+     © 2019
+    
+    
+  </section>
+</footer>
+
+    </main>
+
+    
+
+  </body>
+
+</html>
