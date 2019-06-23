@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="Joakim Kennedy">
+    <meta name="description" content="A place I share my thoughts and play with stuff">
+    <meta name="keywords" content="blog,developer,hacks,security,malware">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Time For Some Function Recovery"/>
+<meta name="twitter:description" content="Time For Some Function Recovery Binaries compiled with the Go compiler includes a large set of metadata. This metadata can be used to assist static analysis of stripped binaries. Stripped binaries, especially statically compiled, are hard to analyze. Since the symbols have been removed and the huge number of subroutines, hello world binary in Go have thousands of subroutines, it can be very time-consuming. Fortunately, the metadata in the binary can be used to reconstruct symbols and also recover information about the source code layout."/>
+
+    <meta property="og:title" content="Time For Some Function Recovery" />
+<meta property="og:description" content="Time For Some Function Recovery Binaries compiled with the Go compiler includes a large set of metadata. This metadata can be used to assist static analysis of stripped binaries. Stripped binaries, especially statically compiled, are hard to analyze. Since the symbols have been removed and the huge number of subroutines, hello world binary in Go have thousands of subroutines, it can be very time-consuming. Fortunately, the metadata in the binary can be used to reconstruct symbols and also recover information about the source code layout." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/posts/pclntab-function-recovery/" />
+<meta property="article:published_time" content="2019-06-23T00:00:00&#43;01:00"/>
+<meta property="article:modified_time" content="2019-06-23T00:00:00&#43;01:00"/>
+
+
+    
+      <base href="../../posts/pclntab-function-recovery/">
+    
+    <title>
+  Time For Some Function Recovery · Playhouse
+</title>
+
+    
+      <link rel="canonical" href="../../posts/pclntab-function-recovery/">
+    
+
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700%7CMerriweather:300,700%7CSource+Code+Pro:400,700" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous" />
+
+    
+      
+      
+      <link rel="stylesheet" href="../../css/coder.min.28d751104f30c16da1aa1bb04015cbe662cacfe0d1b01af4f2240ad58580069c.css" integrity="sha256-KNdREE8wwW2hqhuwQBXL5mLKz&#43;DRsBr08iQK1YWABpw=" crossorigin="anonymous" media="screen" />
+    
+
+    
+
+    
+
+    
+
+    
+    
+    <link rel="icon" type="image/png" href="../../images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="../../images/favicon-16x16.png" sizes="16x16">
+
+    <meta name="generator" content="Hugo 0.55.6" />
+  </head>
+
+  <body class=" ">
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="../../">
+      Playhouse
+    </a>
+    <input type="checkbox" id="menu-toggle" />
+    <label class="menu-button float-right" for="menu-toggle"><i class="fas fa-bars"></i></label>
+    <ul class="navigation-list">
+      
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="../../posts/">Blog</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://go-re.tk">Go Reverse Engineering Tool Kit</a>
+          </li>
+        
+      
+      
+    </ul>
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">Time For Some Function Recovery</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fas fa-calendar"></i>
+              <time datetime='2019-06-23T00:00:00&#43;01:00'>
+                June 23, 2019
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fas fa-clock"></i>
+              19 minutes read
+            </span>
+          </div>
+          
+          
+        </div>
+      </header>
+
+      <div>
+        
+
+<h1 id="time-for-some-function-recovery">Time For Some Function Recovery</h1>
+
+<p>Binaries compiled with the Go compiler includes a large set of metadata. This
+metadata can be used to assist static analysis of stripped binaries. Stripped
+binaries, especially statically compiled, are hard to analyze. Since the
+symbols have been removed and the huge number of subroutines, hello world
+binary in Go have thousands of subroutines, it can be very time-consuming.
+Fortunately, the metadata in the binary can be used to reconstruct symbols and
+also recover information about the source code layout. One of the things that
+can be recovered is function information.</p>
+
+<h2 id="demo-time">Demo time!</h2>
+
+<p>To see how it is possible to recover function information from stripped
+binaries compiled by the Go compiler, let&rsquo;s look at a demo. The demo code below
+is very straight forward. The main function will call the builtin <code>panic</code> to
+essentially through an exception with the string &ldquo;Hello World&rdquo;. Line numbers in
+the source file have also been included and it will obvious next.</p>
+
+<pre><code class="language-go">1 package main
+2
+3 func main() {
+4    panic(&quot;Hello World&quot;)
+5 }
+</code></pre>
+
+<p>The code can be compiled with the linker flags to also strip it and remove
+debug information by executing the first command shown below. The <code>file</code>
+command also confirms that it has been stripped. If the binary is executed, a
+stack trace is printed as expected. In addition to the panic message, the
+stack trace includes some very interesting data. One thing we can see is
+<code>main.main()</code>. This is telling us that function <code>main</code> in package <code>main</code>
+panicked. Below that we have <code>/tmp/panic-demo/panic.go:4</code>, which is telling us
+that the panic occurred on source code line <em>4</em> in the file
+<code>/tmp/panic-demo/panic.go</code>.  All this information, even though the binary has
+been stripped!</p>
+
+<pre><code>$ go build -o demo -ldflags='-s -w' panic.go
+$ file demo
+demo: ELF 64-bit LSB executable, x86-64, version 1 (SYSV),
+statically linked, Go BuildID=peoSP8IJ1ZRc..., stripped
+$ ./demo
+panic: Hello World
+
+goroutine 1 [running]:
+main.main()
+/tmp/panic-demo/panic.go:4 +0x39
+</code></pre>
+
+<p>Where is this data located? Below is a printout of the sections in the produced
+ELF binary. It turns out, all this data is located in the <code>.gopclntab</code> section.
+So what is this section? To answer this question, we have to take a visit to
+Plan 9.</p>
+
+<pre><code>There are 13 section headers, starting at offset 0x1c8:
+
+Section Headers:
+[Nr] Name             Type      Off      Size     ES Flags
+[ 0]                  NULL      00000000 00000000  0
+[ 1] .text            PROGBITS  00001000 0004dc50  0 AX
+[ 2] .rodata          PROGBITS  0004f000 00029df5  0 A
+[ 3] .shstrtab        STRTAB    00078e00 0000007c  0
+[ 4] .typelink        PROGBITS  00078e80 000006d4  0 A
+[ 5] .itablink        PROGBITS  00079558 00000008  0 A
+[ 6] .gosymtab        PROGBITS  00079560 00000000  0 A
+[ 7] .gopclntab       PROGBITS  00079560 0003d443  0 A
+[ 8] .noptrdata       PROGBITS  000b7000 00000c08  0 WA
+[ 9] .data            PROGBITS  000b7c20 00001d30  0 WA
+[10] .bss             NOBITS    000b9960 0001c310  0 WA
+[11] .noptrbss        NOBITS    000d5c80 000026f8  0 WA
+[12] .note.go.buildid NOTE      00000f9c 00000064  0 A
+</code></pre>
+
+<h2 id="plan-9-s-heritage-in-go">Plan 9&rsquo;s heritage in Go</h2>
+
+<p>Plan 9 was a project that started within Bell Labs. It was what can be seen as
+the next evolution of <em>UNIX</em>. Some of Go&rsquo;s initial core contributors have also
+worked on or related projects to Plan 9. That some Plan 9 features can also be
+found within Go is not a far fetch. One place where a <em>pclntab</em> is mentioned is
+in the man page for <code>a.out</code>. Part of the man page is shown below. In the
+description, it mentions that one of the sections in the binary has a &ldquo;PC/line
+number table&rdquo;.  Further, into the man page, it describes the section as a table
+that can be used to recover the absolute line number from a given program
+location. It continues on that it is generated from the source seen by the
+compiler. The description appears to match well with what is seen in Go
+binaries too.</p>
+
+<h3 id="plan-9-man-a-out">Plan 9 man a.out</h3>
+
+<pre><code>NAME
+    a.out - object file format
+
+ SYNOPSIS
+    #include &lt;a.out.h&gt;
+
+DESCRIPTION
+    An executable Plan 9 binary file has up to six sections: a
+    header, the program text, the data, a symbol table, a PC/SP
+    offset table (MC68020 only), and finally a PC/line number
+    table.  The header, given by a structure in &lt;a.out.h&gt;, con-
+    tains 4-byte integers in big-endian order:
+
+   ....
+
+   A similar table, occupying pcsz-bytes, is the next section
+   in an executable; it is present for all architectures.  The
+   same algorithm may be run using this table to recover the
+   absolute source line number from a given program location.
+   The absolute line number (starting from zero) counts the
+   newlines in the C-preprocessed source seen by the compiler.
+   Three symbol types in the main symbol table facilitate con-
+   version of the absolute number to source file and line num-
+   ber:
+</code></pre>
+
+<h2 id="go-s-pc-ln-table">Go&rsquo;s PC/LN Table</h2>
+
+<p>The current implementation version in Go was released with version <em>1.2</em>.  The
+<a href="https://docs.google.com/document/d/1lyPIbmsYbXnpNj57a261hgOYVpNRcgydurVQIyZOz_o/pub">proposal</a>
+both outline the original reason for the table and some of the possible uses.
+The quote below states that it was added to enhance the stack traces.</p>
+
+<blockquote>
+<p>To get accurate crash-time stack traces years ago, I moved the Plan 9 symbol
+and pc-&gt;line number (pcln) tables into memory that would be mapped at run
+time, and then I put code to parse them in the runtime package. In addition
+to stack traces, the stack walking ability is now used for profiling and
+garbage collection.</p>
+</blockquote>
+
+<p>It also states that it can be used for mapping the program counter to source
+code line number:</p>
+
+<blockquote>
+<p>There are many interesting uses of pc-value tables. The most obvious is
+mapping program counter to line number</p>
+</blockquote>
+
+<p>This mean, by parsing the table it should be possible to recover function
+information.</p>
+
+<p>The proposal suggests that the standard library has code that can parse this
+table. Instead of implementing a parser from scratch, it is much easier to use
+something that is already written. Searching the standard library source code
+for references to the <em>PCLNTAB</em>, results in some matches found in the debug
+package. The debug package appears to be a good starting point.</p>
+
+<h2 id="into-the-debug-package">Into the debug package</h2>
+
+<p>One of the matches is found in the <code>pclntab_test.go</code> file. The function is
+shown below. It can be seen that it gets the <code>.gopclntab</code> section, passes it to
+the <code>NewLineTable</code> function and passes the output to <code>NewTable</code> function.  The
+only problem is, it also uses the symbol section. For stripped binaries, this
+section does not contain any symbols.</p>
+
+<pre><code class="language-go">func parse(file string, f *elf.File, t *testing.T) (*elf.File, *Table) {
+	s := f.Section(&quot;.gosymtab&quot;)
+	if s == nil {
+		t.Skip(&quot;no .gosymtab section&quot;)
+	}
+	symdat, err := s.Data()
+	if err != nil {
+		f.Close()
+		t.Fatalf(&quot;reading %s gosymtab: %v&quot;, file, err)
+	}
+	pclndat, err := f.Section(&quot;.gopclntab&quot;).Data()
+	if err != nil {
+		f.Close()
+		t.Fatalf(&quot;reading %s gopclntab: %v&quot;, file, err)
+	}
+
+	pcln := NewLineTable(pclndat, f.Section(&quot;.text&quot;).Addr)
+	tab, err := NewTable(symdat, pcln)
+	if err != nil {
+		f.Close()
+		t.Fatalf(&quot;parsing %s gosymtab: %v&quot;, file, err)
+	}
+
+	return f, tab
+}
+</code></pre>
+
+<p>After looking into the <code>NewTable</code> function, it is clear that it passes
+the symbol table to the <code>walksymtab</code> function.</p>
+
+<pre><code class="language-go">func NewTable(symtab []byte, pcln *LineTable) (*Table, error) {
+	var n int
+	err := walksymtab(symtab, func(s sym) error {
+		n++
+		return nil
+	})
+        ...
+</code></pre>
+
+<p>Luckily the <code>walksymtab</code> does not need any symbols, as can be seen
+below. Consequently, an empty byte array can be passed in instead.</p>
+
+<pre><code class="language-go">func walksymtab(data []byte, fn func(sym) error) error {
+	if len(data) == 0 { // missing symtab is okay
+		return nil
+	}
+        ...
+</code></pre>
+
+<p>The structure of the table returned by the <code>NewTable</code> function is
+shown below. Excluding the private field, the only entry available
+in newer Go versions is the array of <code>Func</code>.</p>
+
+<pre><code class="language-go">// Table represents a Go symbol table. It stores all of the
+// symbols decoded from the program and provides methods to translate
+// between symbols, names, and addresses.
+type Table struct {
+	Syms  []Sym // nil for Go 1.3 and later binaries
+	Funcs []Func
+	Files map[string]*Obj // nil for Go 1.2 and later binaries
+	Objs  []Obj           // nil for Go 1.2 and later binaries
+
+	go12line *LineTable // Go 1.2 line number table
+}
+</code></pre>
+
+<p>The <code>Func</code> structure is listed below. This structure has two important
+fields, <em>Entry</em> and <em>End</em>. They are the starting and ending program
+counters for the function.</p>
+
+<pre><code class="language-go">// A Func collects information about a single function.
+type Func struct {
+	Entry uint64
+	*Sym
+	End       uint64
+	Params    []*Sym // nil for Go 1.3 and later binaries
+	Locals    []*Sym // nil for Go 1.3 and later binaries
+	FrameSize int
+	LineTable *LineTable
+	Obj       *Obj
+}
+</code></pre>
+
+<p>The structure has methods that can be used to get the package name, the base
+name, and its receiver name. If the receiver name is a none empty string, it is
+actually a method. The base name is just the function or method name, without
+the package name or the receiver name.</p>
+
+<p>To get information about the source code file, the <code>PCToLine</code> method on the
+<code>Table</code> structure can be used. The function signature of this method is shown
+below. As can be seen, if a program counter is passed in the method returns the
+file name and line number.</p>
+
+<pre><code class="language-go">// PCToLine looks up line number information for a program counter.
+// If there is no information, it returns fn == nil.
+func (t *Table) PCToLine(pc uint64) (file string, line int, fn *Func)
+</code></pre>
+
+<p>Using these methods, the data found in the panic stack trace can be extracted.
+Since the beginning and the end program counters are known, this can be used
+to estimate how many lines the function occupy in the source code file.</p>
+
+<h2 id="working-with-pe-files">Working with PE files</h2>
+
+<p>When it comes down to analyzing ELF files the process is more straight forward.
+The <code>pclntab</code> is located in its own section which means it is easy to extract
+and analyze. When it comes to PE file, it becomes harder. As mentioned in the
+<a href="../../posts/hello-moduledata">moduledata</a> post, most data structures are not
+located in their own sections in PE files. This means the <code>pclntab</code> needs to be
+searched for in the PE file.</p>
+
+<p>The <code>debug</code> package has one interesting function and a constant defined, both
+shown below. The <code>go12init</code> function is called when it parses the <code>pclntab</code>. In
+the snippet below it can be seen that the function checks some offsets in the
+table for specific values. It also checks that the table starts with the magic
+bytes <code>0xfffffffb</code>. This information can be used to find and validate that we
+have found a good candidate for the <code>pclntab</code> in the file. Essentially:</p>
+
+<ol>
+<li>Search the binary for the magic bytes.</li>
+<li>Check the match by performing similar checks as the <code>go12init</code> function.</li>
+<li>If the checks pass it is probably the <code>pclntab</code>. If not, back to <em>1</em>.</li>
+</ol>
+
+<pre><code class="language-go">const go12magic = 0xfffffffb
+
+
+// go12init initializes the Go 1.2 metadata if t is a Go 1.2 symbol table.
+func (t *LineTable) go12Init() {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	if t.go12 != 0 {
+		return
+	}
+
+	defer func() {
+		// If we panic parsing, assume it's not a Go 1.2 symbol table.
+		recover()
+	}()
+
+	// Check header: 4-byte magic, two zeros, pc quantum, pointer size.
+	t.go12 = -1 // not Go 1.2 until proven otherwise
+	if len(t.Data) &lt; 16 || t.Data[4] != 0 || t.Data[5] != 0 ||
+		(t.Data[6] != 1 &amp;&amp; t.Data[6] != 2 &amp;&amp; t.Data[6] != 4) || // pc quantum
+		(t.Data[7] != 4 &amp;&amp; t.Data[7] != 8) { // pointer size
+		return
+	}
+
+	switch uint32(go12magic) {
+	case binary.LittleEndian.Uint32(t.Data):
+		t.binary = binary.LittleEndian
+	case binary.BigEndian.Uint32(t.Data):
+		t.binary = binary.BigEndian
+	default:
+		return
+	}
+</code></pre>
+
+<h2 id="construct-a-hypothetical-source-tree-summary">Construct a hypothetical source tree summary</h2>
+
+<p>With these tools, it is possible to reconstruct a theoretical source code
+layout.  By using the <code>PCToLine</code> function, it is possible to get the source
+code line numbers the function was located between. Sorting this by file and
+some formatting it is possible to produce a tree structure as shown below. It
+can be seen in the example, that the main function has all its code located in
+the <code>main.go</code> file. This file was located in the folder
+<code>C:/!Project/C1/ProjectC1Dec</code> during compile time. The output also includes a
+file called <code>&lt;autogenerated&gt;</code>. This is for functions generated by the compiler.
+In this case, the coder did not use and implement the <code>init</code> function so a dummy
+version was added by the compiler.</p>
+
+<pre><code>$ shasum zebrocy &amp;&amp; file zebrocy &amp;&amp; redress -src zebrocy
+2114fb25d5243f76c85c0df68fc4bf8e93cfb19d  zebrocy
+zebrocy: PE32 executable (GUI) Intel 80386 (stripped to external PDB), for MS Windows
+Package main: C:/!Project/C1/ProjectC1Dec
+File: &lt;autogenerated&gt;
+	init Lines: 1 to 1 (0)
+File: main.go
+	GetDisk Lines: 27 to 37 (10)
+	Getfilename Lines: 37 to 52 (15)
+	CMDRunAndExit Lines: 52 to 58 (6)
+	Tasklist Lines: 58 to 70 (12)
+	Installed Lines: 70 to 82 (12)
+	Session_List Lines: 82 to 97 (15)
+	List_Local_Users Lines: 97 to 119 (22)
+	systeminformation Lines: 119 to 124 (5)
+	CreateSysinfo Lines: 124 to 137 (13)
+	ParseData Lines: 137 to 153 (16)
+	SendPOSTRequests Lines: 153 to 174 (21)
+	Screen Lines: 174 to 192 (18)
+	GetSND Lines: 192 to 215 (23)
+	PrcName Lines: 215 to 222 (7)
+	main Lines: 222 to 229 (7)
+</code></pre>
+
+<p>The other example shown below is of a botnet targeting Linux machines. This is
+a large malware with its functionality broken up into multiple packages.</p>
+
+<pre><code>$ shasum ddgs &amp;&amp; file ddgs &amp;&amp; redress -src ddgs
+d60014779308bbfc4d18dfd4c92dbfaf24431bef  ddgs
+ddgs: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), statically linked, Go BuildID=KSx-IUthLVOHq0UzEZyM/mjB8HOw24vd_xZCdEqVN/dNDZfk8_Npo5ipOkpocJ/E3b5qlPRyk4d0WtEMJ8b, stripped
+Package ddgs/xlist: /home/x/Workspace/src/ddgs/xlist
+File: &lt;autogenerated&gt;
+	init Lines: 1 to 1 (0)
+	(*NetTransport)Bootstrap Lines: 1 to 1 (0)
+	(*NetTransport)NotifyAlive Lines: 1 to 1 (0)
+	(NetTransport)Bootstrap Lines: 1 to 1 (0)
+	(NetTransport)NotifyAlive Lines: 1 to 1 (0)
+	(*XList)GetHealthScore Lines: 1 to 1 (0)
+	(*XList)Join Lines: 1 to 1 (0)
+	(*XList)Leave Lines: 1 to 1 (0)
+	(*XList)LocalNode Lines: 1 to 1 (0)
+	(*XList)Members Lines: 1 to 1 (0)
+	(*XList)NumMembers Lines: 1 to 1 (0)
+	(*XList)Ping Lines: 1 to 1 (0)
+	(*XList)ProtocolVersion Lines: 1 to 1 (0)
+	(*XList)SendBestEffort Lines: 1 to 1 (0)
+	(*XList)SendReliable Lines: 1 to 1 (0)
+	(*XList)SendTo Lines: 1 to 1 (0)
+	(*XList)SendToTCP Lines: 1 to 1 (0)
+	(*XList)SendToUDP Lines: 1 to 1 (0)
+	(*XList)UpdateNode Lines: 1 to 1 (0)
+	(XList)GetHealthScore Lines: 1 to 1 (0)
+	(XList)Join Lines: 1 to 1 (0)
+	(XList)Leave Lines: 1 to 1 (0)
+	(XList)LocalNode Lines: 1 to 1 (0)
+	(XList)Members Lines: 1 to 1 (0)
+	(XList)NumMembers Lines: 1 to 1 (0)
+	(XList)Ping Lines: 1 to 1 (0)
+	(XList)ProtocolVersion Lines: 1 to 1 (0)
+	(XList)SendBestEffort Lines: 1 to 1 (0)
+	(XList)SendReliable Lines: 1 to 1 (0)
+	(XList)SendTo Lines: 1 to 1 (0)
+	(XList)SendToTCP Lines: 1 to 1 (0)
+	(XList)SendToUDP Lines: 1 to 1 (0)
+	(XList)UpdateNode Lines: 1 to 18 (17)
+File: bootstrap.go
+	(*bootstraps)NotifyAlive Lines: 17 to 25 (8)
+	(*bootstraps)DialTimeout Lines: 25 to 38 (13)
+	(*bootstraps)Bootstrap Lines: 38 to 65 (27)
+	(*bootstraps).Bootstrap)func1 Lines: 45 to 78 (33)
+	NewBootstraps Lines: 65 to 68 (3)
+File: net_transport.go
+	NewNetTransport Lines: 56 to 147 (91)
+	(NewNetTransport)func1 Lines: 78 to 80 (2)
+	(*NetTransport)GetAutoBindPort Lines: 147 to 154 (7)
+	(*NetTransport)FinalAdvertiseAddr Lines: 154 to 159 (5)
+	(*NetTransport)WriteTo Lines: 159 to 174 (15)
+	(*NetTransport)PacketCh Lines: 174 to 179 (5)
+	(*NetTransport)DialTimeout Lines: 179 to 184 (5)
+	(*NetTransport)StreamCh Lines: 184 to 189 (5)
+	(*NetTransport)Shutdown Lines: 189 to 208 (19)
+	(*NetTransport)tcpListen Lines: 208 to 227 (19)
+	(*NetTransport)udpListen Lines: 227 to 265 (38)
+	setUDPRecvBuf Lines: 265 to 274 (9)
+File: xlist.go
+	(*XList)Shutdown Lines: 13 to 18 (5)
+	New Lines: 18 to 45 (27)
+Package main: /home/x/Workspace/src/ddgs/slave
+File: &lt;autogenerated&gt;
+	init Lines: 1 to 1 (0)
+	(*miner)CheckMd5 Lines: 1 to 1 (0)
+	(*miner)CheckProcExists Lines: 1 to 1 (0)
+	(*miner)Do Lines: 1 to 1 (0)
+	(*miner)Download Lines: 1 to 1 (0)
+	(*miner)Run Lines: 1 to 1 (0)
+File: backdoor.go
+	(*backdoor)background Lines: 18 to 27 (9)
+	(*backdoor)injectSSHKey Lines: 27 to 66 (39)
+	NewBackdoor Lines: 66 to 68 (2)
+File: guard.go
+	(*guard)background Lines: 17 to 84 (67)
+	(*guard).background)func1 Lines: 23 to 108 (85)
+	NewGuard Lines: 84 to 87 (3)
+File: main.go
+	pingpong Lines: 32 to 71 (39)
+	singleInstance Lines: 71 to 81 (10)
+	(init)0 Lines: 81 to 87 (6)
+	main Lines: 87 to 117 (30)
+	(main)func1 Lines: 108 to 109 (1)
+File: miner.go
+	(*minerd)background Lines: 21 to 53 (32)
+	(*minerd)Update Lines: 53 to 58 (5)
+	NewMinerd Lines: 58 to 59 (1)
+File: xlist.go
+	MustXList Lines: 15 to 23 (8)
+	(MustXList)func1 Lines: 50 to 64 (14)
+Package ddgs/glog: /home/x/Workspace/src/ddgs/glog
+File: &lt;autogenerated&gt;
+	init Lines: 1 to 52 (51)
+	(*buffer)Bytes Lines: 1 to 1 (0)
+	(*buffer)Cap Lines: 1 to 1 (0)
+	(*buffer)Grow Lines: 1 to 1 (0)
+	(*buffer)Len Lines: 1 to 1 (0)
+	(*buffer)Next Lines: 1 to 1 (0)
+	(*buffer)Read Lines: 1 to 1 (0)
+	(*buffer)ReadByte Lines: 1 to 1 (0)
+	(*buffer)ReadBytes Lines: 1 to 1 (0)
+	(*buffer)ReadFrom Lines: 1 to 1 (0)
+	(*buffer)ReadRune Lines: 1 to 1 (0)
+	(*buffer)ReadString Lines: 1 to 1 (0)
+	(*buffer)Reset Lines: 1 to 1 (0)
+	(*buffer)String Lines: 1 to 1 (0)
+	(*buffer)Truncate Lines: 1 to 1 (0)
+	(*buffer)UnreadByte Lines: 1 to 1 (0)
+	(*buffer)UnreadRune Lines: 1 to 1 (0)
+	(*buffer)Write Lines: 1 to 1 (0)
+	(*buffer)WriteByte Lines: 1 to 1 (0)
+	(*buffer)WriteRune Lines: 1 to 1 (0)
+	(*buffer)WriteString Lines: 1 to 1 (0)
+	(*buffer)WriteTo Lines: 1 to 1 (0)
+	(*syncBuffer)Available Lines: 1 to 1 (0)
+	(*syncBuffer)Buffered Lines: 1 to 1 (0)
+	(*syncBuffer)Flush Lines: 1 to 1 (0)
+	(*syncBuffer)ReadFrom Lines: 1 to 1 (0)
+	(*syncBuffer)Reset Lines: 1 to 1 (0)
+	(*syncBuffer)Size Lines: 1 to 1 (0)
+	(*syncBuffer)WriteByte Lines: 1 to 1 (0)
+	(*syncBuffer)WriteRune Lines: 1 to 1 (0)
+	(*syncBuffer)WriteString Lines: 1 to 1 (0)
+	(*Verbose)Info Lines: 1 to 1 (0)
+	(*Verbose)Infof Lines: 1 to 1 (0)
+	(*Verbose)Infoln Lines: 1 to 1 (0)
+	(syncBuffer)Available Lines: 1 to 1 (0)
+	(syncBuffer)Buffered Lines: 1 to 1 (0)
+	(syncBuffer)Flush Lines: 1 to 1 (0)
+	(syncBuffer)ReadFrom Lines: 1 to 1 (0)
+	(syncBuffer)Reset Lines: 1 to 1 (0)
+	(syncBuffer)Size Lines: 1 to 1 (0)
+	(syncBuffer)WriteByte Lines: 1 to 1 (0)
+	(syncBuffer)WriteRune Lines: 1 to 1 (0)
+	(syncBuffer)WriteString Lines: 1 to 1 (0)
+File: glog.go
+	(*severity)get Lines: 118 to 123 (5)
+	(*severity)set Lines: 123 to 128 (5)
+	(*severity)String Lines: 128 to 133 (5)
+	(*severity)Get Lines: 133 to 138 (5)
+	(*severity)Set Lines: 138 to 154 (16)
+	severityByName Lines: 154 to 171 (17)
+	(*OutputStats)Lines Lines: 171 to 176 (5)
+	(*OutputStats)Bytes Lines: 176 to 207 (31)
+	(*Level)get Lines: 207 to 212 (5)
+	(*Level)set Lines: 212 to 217 (5)
+	(*Level)String Lines: 217 to 222 (5)
+	(*Level)Get Lines: 222 to 227 (5)
+	(*Level)Set Lines: 227 to 253 (26)
+	(*modulePat)match Lines: 253 to 261 (8)
+	(*moduleSpec)String Lines: 261 to 277 (16)
+	(*moduleSpec)Get Lines: 277 to 284 (7)
+	(*moduleSpec)Set Lines: 284 to 317 (33)
+	isLiteral Lines: 317 to 336 (19)
+	(*traceLocation)match Lines: 336 to 346 (10)
+	(*traceLocation)String Lines: 346 to 355 (9)
+	(*traceLocation)Get Lines: 355 to 363 (8)
+	(*traceLocation)Set Lines: 363 to 398 (35)
+	(init)0 Lines: 398 to 415 (17)
+	Flush Lines: 415 to 470 (55)
+	(*loggingT)setVState Lines: 470 to 489 (19)
+	(*loggingT)getBuffer Lines: 489 to 506 (17)
+	(*loggingT)putBuffer Lines: 506 to 536 (30)
+	(*loggingT)header Lines: 536 to 551 (15)
+	(*loggingT)formatHeader Lines: 551 to 604 (53)
+	(*buffer)nDigits Lines: 604 to 616 (12)
+	(*buffer)someDigits Lines: 616 to 631 (15)
+	(*loggingT)println Lines: 631 to 637 (6)
+	(*loggingT)print Lines: 637 to 641 (4)
+	(*loggingT)printDepth Lines: 641 to 650 (9)
+	(*loggingT)printf Lines: 650 to 672 (22)
+	(*loggingT)output Lines: 672 to 747 (75)
+	(*loggingT).output)func1 Lines: 725 to 749 (24)
+	timeoutFlush Lines: 747 to 761 (14)
+	(timeoutFlush)func1 Lines: 749 to 752 (3)
+	stacks Lines: 761 to 788 (27)
+	(*loggingT)exit Lines: 788 to 811 (23)
+	(*syncBuffer)Sync Lines: 811 to 815 (4)
+	(*syncBuffer)Write Lines: 815 to 830 (15)
+	(*syncBuffer)rotateFile Lines: 830 to 862 (32)
+	(*loggingT)createFiles Lines: 862 to 882 (20)
+	(*loggingT)flushDaemon Lines: 882 to 889 (7)
+	(*loggingT)lockAndFlushAll Lines: 889 to 897 (8)
+	(*loggingT)flushAll Lines: 897 to 962 (65)
+	(*loggingT)setV Lines: 962 to 1000 (38)
+	V Lines: 1000 to 1031 (31)
+	(Verbose)Info Lines: 1031 to 1039 (8)
+	(Verbose)Infoln Lines: 1039 to 1047 (8)
+	(Verbose)Infof Lines: 1047 to 1171 (124)
+	Exitln Lines: 1171 to 1174 (3)
+File: glog_file.go
+	createLogDirs Lines: 43 to 57 (14)
+	(init)1 Lines: 57 to 74 (17)
+	shortHostname Lines: 74 to 83 (9)
+	logName Lines: 83 to 105 (22)
+	create Lines: 105 to 725 (620)
+Package ddgs/common: /home/x/Workspace/src/ddgs/common
+File: &lt;autogenerated&gt;
+	init Lines: 1 to 88 (87)
+File: resolver_with_public_dns.go
+	NewResolver Lines: 11 to 30 (19)
+	(NewResolver)func1 Lines: 13 to 55 (42)
+	(glob.)func1 Lines: 28 to 35 (7)
+File: rsa.go
+	(*SignData)Verify Lines: 30 to 37 (7)
+	(*SignData)Decode Lines: 37 to 45 (8)
+	RsaEncrypt Lines: 45 to 48 (3)
+File: utils.go
+	(*value)Set Lines: 24 to 28 (4)
+	(*value)Get Lines: 28 to 54 (26)
+	(*home)Dir Lines: 54 to 79 (25)
+	(*home).Dir)func1 Lines: 55 to 80 (25)
+	(*stUID)String Lines: 79 to 106 (27)
+	(*stUID).String)func1 Lines: 80 to 91 (11)
+File: wanip.go
+	(*wanip)check Lines: 22 to 43 (21)
+	(*wanip)MustGet Lines: 43 to 45 (2)
+Package ddgs/cmd: /home/x/Workspace/src/ddgs/cmd
+File: &lt;autogenerated&gt;
+	init Lines: 1 to 21 (20)
+	(*AAredis)Once Lines: 1 to 1 (0)
+	(*AAredis)Options Lines: 1 to 1 (0)
+	(*AAssh)Once Lines: 1 to 1 (0)
+	(*AAssh)Options Lines: 1 to 27 (26)
+	(*timeout)Hours Lines: 1 to 1 (0)
+	(*timeout)Minutes Lines: 1 to 1 (0)
+	(*timeout)Nanoseconds Lines: 1 to 1 (0)
+	(*timeout)Round Lines: 1 to 1 (0)
+	(*timeout)Seconds Lines: 1 to 1 (0)
+	(*timeout)String Lines: 1 to 1 (0)
+	(*timeout)Truncate Lines: 1 to 1 (0)
+	(timeout)Hours Lines: 1 to 1 (0)
+	(timeout)Minutes Lines: 1 to 1 (0)
+	(timeout)Nanoseconds Lines: 1 to 1 (0)
+	(timeout)Round Lines: 1 to 1 (0)
+	(timeout)Seconds Lines: 1 to 1 (0)
+	(timeout)String Lines: 1 to 1 (0)
+	(timeout)Truncate Lines: 1 to 1 (0)
+	(*result)Delete Lines: 1 to 1 (0)
+	(*result)Load Lines: 1 to 1 (0)
+	(*result)LoadOrStore Lines: 1 to 1 (0)
+	(*result)Range Lines: 1 to 1 (0)
+	(*result)Store Lines: 1 to 1 (0)
+	(*Killer)Once Lines: 1 to 1 (0)
+	(*LKProc)Once Lines: 1 to 1 (0)
+	(*Sh)Once Lines: 1 to 1 (0)
+	(*Update)CheckMd5 Lines: 1 to 1 (0)
+	(*Update)CheckProcExists Lines: 1 to 1 (0)
+	(*Update)Do Lines: 1 to 1 (0)
+	(*Update)Download Lines: 1 to 1 (0)
+	(*Update)Once Lines: 1 to 1 (0)
+	(*Update)Run Lines: 1 to 116 (115)
+File: base.go
+	(*Base)doWithTimeout Lines: 23 to 53 (30)
+	(*Base).doWithTimeout)func1 Lines: 25 to 83 (58)
+	(*Base).doWithTimeout.func1)1 Lines: 26 to 28 (2)
+	(*Base)doPipe Lines: 53 to 58 (5)
+	(*Base)Once Lines: 58 to 60 (2)
+File: base_aa.go
+	(*AAOptions)Options Lines: 34 to 59 (25)
+	(*AABase)Apply Lines: 59 to 114 (55)
+	(*AABase).Apply)func1 Lines: 82 to 159 (77)
+	(*AABase).Apply.func1)1 Lines: 83 to 85 (2)
+	(*AABase)IsLanAddr Lines: 114 to 130 (16)
+	inc Lines: 130 to 139 (9)
+	(*AABase)genIPList Lines: 139 to 140 (1)
+	(*AABase).genIPList)func1 Lines: 140 to 191 (51)
+	(*AABase).genIPList.func1)1 Lines: 159 to 160 (1)
+File: base_xrun.go
+	(*XRun)CheckMd5 Lines: 28 to 39 (11)
+	(*XRun)CheckProcExists Lines: 39 to 55 (16)
+	(*XRun)Download Lines: 55 to 90 (35)
+	(*XRun)Run Lines: 90 to 105 (15)
+	(*XRun)Do Lines: 105 to 108 (3)
+File: cmd_killer.go
+	(*Killer)Handler Lines: 19 to 26 (7)
+File: cmd_lkproc.go
+	(*LKProc)Handler Lines: 26 to 28 (2)
+File: cmd_redis.go
+	(*AAredis)exploit Lines: 23 to 47 (24)
+	(*AAredis)Test Lines: 47 to 74 (27)
+	(*AAredis)Handler Lines: 74 to 80 (6)
+File: cmd_sh.go
+	(*Sh)Handler Lines: 15 to 28 (13)
+File: cmd_ssh.go
+	(*AAssh)TestOne Lines: 28 to 54 (26)
+	(*AAssh)Test Lines: 54 to 74 (20)
+	(*AAssh)Handler Lines: 74 to 80 (6)
+File: cmd_update.go
+	(*Update)Handler Lines: 14 to 26 (12)
+File: report.go
+	(*report)Add Lines: 26 to 30 (4)
+	(*report)NewReader Lines: 30 to 84 (54)
+	(*report)Reset Lines: 84 to 85 (1)
+File: result.go
+	(*result)MarshalMsgpack Lines: 14 to 38 (24)
+	(*result).MarshalMsgpack)func1 Lines: 16 to 66 (50)
+	(*timeout)UnmarshalMsgpack Lines: 38 to 41 (3)
+File: table.go
+	(*Table)Do Lines: 19 to 26 (7)
+	(Cmd)Handler-fm Lines: 27 to 27 (0)
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The <code>pclntab</code> has many uses in a Go binary. One of its uses is for the runtime
+to produce meaning full stack traces in the case of a <code>panic</code>. The table holds
+valuable information about functions that can be used to analyze unknown
+stripped binaries compiled by the Go compiler. For ELF binaries, the table is
+located in its own sections while for PE files it needs to be searched for.
+Once it has been located, the Go standard library provides functions to process
+and extract the data from the table. With this data, it is possible to
+reconstruct an overview of the source code tree structure. This information can
+be used to group binaries that have been compiled from the same source code but
+to different architectures and operating systems since this data should be
+identical.</p>
+
+      </div>
+
+      <footer>
+        
+
+
+        
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    
+      <p>All rights reserved</p>
+    
+     © 2019
+    
+    
+  </section>
+</footer>
+
+    </main>
+
+    
+
+  </body>
+
+</html>
