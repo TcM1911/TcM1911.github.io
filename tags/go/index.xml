@@ -6,10 +6,19 @@
     <description>Recent content in go on Playhouse</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 16 Jun 2019 00:00:00 +0100</lastBuildDate>
+    <lastBuildDate>Sun, 23 Jun 2019 00:00:00 +0100</lastBuildDate>
     
 	<atom:link href="/tags/go/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Time For Some Function Recovery</title>
+      <link>/posts/pclntab-function-recovery/</link>
+      <pubDate>Sun, 23 Jun 2019 00:00:00 +0100</pubDate>
+      
+      <guid>/posts/pclntab-function-recovery/</guid>
+      <description>Time For Some Function Recovery Binaries compiled with the Go compiler includes a large set of metadata. This metadata can be used to assist static analysis of stripped binaries. Stripped binaries, especially statically compiled, are hard to analyze. Since the symbols have been removed and the huge number of subroutines, hello world binary in Go have thousands of subroutines, it can be very time-consuming. Fortunately, the metadata in the binary can be used to reconstruct symbols and also recover information about the source code layout.</description>
+    </item>
     
     <item>
       <title>Say Hello to Moduledata</title>
