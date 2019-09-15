@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="Joakim Kennedy">
+    <meta name="description" content="A place I share my thoughts and play with stuff">
+    <meta name="keywords" content="blog,developer,hacks,security,malware">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Extracting type-information from a Go binary"/>
+<meta name="twitter:description" content="All the types used by a Go application are stored within a *types* section inside the binary. By parsing this data structure, it is possible to fully recover all the function definitions. This includes private types and fields. This post walks through how to extract and parse this type data so the type definitions can be reconstructed for all types in the binary."/>
+
+    <meta property="og:title" content="Extracting type-information from a Go binary" />
+<meta property="og:description" content="All the types used by a Go application are stored within a *types* section inside the binary. By parsing this data structure, it is possible to fully recover all the function definitions. This includes private types and fields. This post walks through how to extract and parse this type data so the type definitions can be reconstructed for all types in the binary." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/posts/extracting-go-types/" />
+<meta property="article:published_time" content="2019-09-15T00:00:00+01:00" />
+<meta property="article:modified_time" content="2019-09-15T00:00:00+01:00" />
+
+
+    
+      <base href="../../posts/extracting-go-types/">
+    
+    <title>
+  Extracting type-information from a Go binary · Playhouse
+</title>
+
+    
+      <link rel="canonical" href="../../posts/extracting-go-types/">
+    
+
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700%7CMerriweather:300,700%7CSource+Code+Pro:400,700" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous" />
+
+    
+      
+      
+      <link rel="stylesheet" href="../../css/coder.min.28d751104f30c16da1aa1bb04015cbe662cacfe0d1b01af4f2240ad58580069c.css" integrity="sha256-KNdREE8wwW2hqhuwQBXL5mLKz&#43;DRsBr08iQK1YWABpw=" crossorigin="anonymous" media="screen" />
+    
+
+    
+
+    
+
+    
+
+    
+    
+    <link rel="icon" type="image/png" href="../../images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="../../images/favicon-16x16.png" sizes="16x16">
+
+    <meta name="generator" content="Hugo 0.58.1" />
+  </head>
+
+  <body class=" ">
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="../../">
+      Playhouse
+    </a>
+    <input type="checkbox" id="menu-toggle" />
+    <label class="menu-button float-right" for="menu-toggle"><i class="fas fa-bars"></i></label>
+    <ul class="navigation-list">
+      
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="../../posts/">Blog</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://go-re.tk">Go Reverse Engineering Tool Kit</a>
+          </li>
+        
+      
+      
+    </ul>
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">Extracting type-information from a Go binary</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fas fa-calendar"></i>
+              <time datetime='2019-09-15T00:00:00&#43;01:00'>
+                September 15, 2019
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fas fa-clock"></i>
+              14 minutes read
+            </span>
+          </div>
+          
+          
+        </div>
+      </header>
+
+      <div>
+        
+
+<h1 id="introduction">Introduction</h1>
+
+<p>Go is a strongly typed language. This means that you can&rsquo;t concatenate for
+example a string with an integer without first converting the integer to a
+string. For this to be enforced, there needs to be a way for the runtime to
+track all the different types. In terms of Go, all the types have a definition
+that is included in the binary. By parsing all of these type definitions, it
+is possible to reconstruct all the types inside the binary which can aid the
+analysis of a suspicious application/malware. This post will walk through where
+this data is located, how to extract and parse it so the type definitions can
+be reconstructed for all the types in the binary.</p>
+
+<h1 id="it-all-starts-with-moduledata">It all starts with moduledata</h1>
+
+<p>As described in a <a href="../../posts/hello-moduledata/">previous blog post</a>, the
+moduledata structure holds a pointer to some very important data structures in
+the Go binary. For recovering type-information, we are mainly interested in
+two data structures: <code>types</code> and <code>typelinks</code>. Below is the current moduledata
+structure as of this writing.</p>
+
+<pre><code class="language-go">type moduledata struct {
+	pclntable    []byte
+	ftab         []functab
+	filetab      []uint32
+	findfunctab  uintptr
+	minpc, maxpc uintptr
+
+	text, etext           uintptr
+	noptrdata, enoptrdata uintptr
+	data, edata           uintptr
+	bss, ebss             uintptr
+	noptrbss, enoptrbss   uintptr
+	end, gcdata, gcbss    uintptr
+	types, etypes         uintptr
+
+	textsectmap []textsect
+	typelinks   []int32 // offsets from types
+	itablinks   []*itab
+
+	ptab []ptabEntry
+
+	pluginpath string
+	pkghashes  []modulehash
+
+	modulename   string
+	modulehashes []modulehash
+
+	hasmain uint8 // 1 if module contains the main function, 0 otherwise
+
+	gcdatamask, gcbssmask bitvector
+
+	typemap map[typeOff]*_type // offset to *_rtype in previous module
+
+	bad bool // module failed to load and should be ignored
+
+	next *moduledata
+}
+</code></pre>
+
+<p>The moduledata structure has been relatively stable in the last few releases of
+the Go compiler. In version <em>1.8</em> the field <code>textsectmap</code> was added which means
+the offset for the <code>typelinks</code> slice is different between 1.7 and 1.8+, the
+moduledata structure for 1.7 is shown below, otherwise, it has been unchanged.</p>
+
+<pre><code class="language-go">type moduledata struct {
+	pclntable    []byte
+	ftab         []functab
+	filetab      []uint32
+	findfunctab  uintptr
+	minpc, maxpc uintptr
+
+	text, etext           uintptr
+	noptrdata, enoptrdata uintptr
+	data, edata           uintptr
+	bss, ebss             uintptr
+	noptrbss, enoptrbss   uintptr
+	end, gcdata, gcbss    uintptr
+	types, etypes         uintptr
+
+	typelinks []int32 // offsets from types
+	itablinks []*itab
+
+	modulename   string
+	modulehashes []modulehash
+
+	gcdatamask, gcbssmask bitvector
+
+	typemap map[typeOff]*_type // offset to *_rtype in previous module
+
+	next *moduledata
+}
+</code></pre>
+
+<p>All the type-information is located in the <code>types</code> data. The <code>types</code> data not
+only holds the type-information, but it also holds other data about the types.
+To find the type-information, the <code>typelinks</code> slice is needed. This slice holds
+offsets from the beginning of the <code>types</code> to where the information of a type is
+stored.  Unfortunately, offsets for all types are not located within this slice,
+but it is still possible to find all types using this array.</p>
+
+<h1 id="parsing-the-type-information">Parsing the type-information</h1>
+
+<p>The offsets in the <code>typelinks</code> points to a data structure that describes the
+type. The data structure is used by Go track all the different types within the
+binary. The structure is defined in three places: the compiler, the <em>reflect</em>
+package, and the <em>runtime</em> package. In the <em>runtime</em> package, the name of the
+structure is <code>_type</code> and in the <em>reflect</em> package it is called <code>rtype</code>. The
+definition of the <code>rtype</code> structure is shown below.</p>
+
+<pre><code class="language-go">type rtype struct {
+	size       uintptr
+	ptrdata    uintptr  // number of bytes in the type that can contain pointers
+	hash       uint32   // hash of type; avoids computation in hash tables
+	tflag      tflag    // extra type-information flags
+	align      uint8    // alignment of variable with this type
+	fieldAlign uint8    // alignment of struct field with this type
+	kind       uint8    // enumeration for C
+	alg        *typeAlg // algorithm table
+	gcdata     *byte    // garbage collection data
+	str        nameOff  // string form
+	ptrToThis  typeOff  // type for pointer to this type, may be zero
+}
+</code></pre>
+
+<p>As said earlier, all types in the binary have a corresponding <code>_type</code>/<code>rtype</code>
+structure. This includes all the primitive types and user-defined types.  The
+kind field is an <em>enum</em> value corresponding to the underlying primitive type. All
+the possible options are shown below.</p>
+
+<pre><code class="language-go">const (
+	Invalid Kind = iota
+	Bool
+	Int
+	Int8
+	Int16
+	Int32
+	Int64
+	Uint
+	Uint8
+	Uint16
+	Uint32
+	Uint64
+	Uintptr
+	Float32
+	Float64
+	Complex64
+	Complex128
+	Array
+	Chan
+	Func
+	Interface
+	Map
+	Ptr
+	Slice
+	String
+	Struct
+	UnsafePointer
+)
+</code></pre>
+
+<p>Another interesting field is <code>str</code>. This value is an offset from the beginning
+of the <em>types</em> data to where a packed byte structure exists with the type&rsquo;s
+name and other string information. For example, the primitive type <code>Int</code> will
+also have the name of <code>int</code>, but derived types are different. Say you have
+defined a type <code>superInt</code> as below. Its name would be <em>superInt</em> while the kind
+enum is an <code>Int</code>.</p>
+
+<pre><code class="language-go">type superInt int
+</code></pre>
+
+<p>The <code>tflag</code> field is a bitmask that is used to inform about potentially other
+data after the structure as described in the source code snippet shown below.</p>
+
+<pre><code class="language-go">// tflag is used by an rtype to signal what extra type-information is
+// available in the memory directly following the rtype value.
+//
+// tflag values must be kept in sync with copies in:
+//	cmd/compile/internal/gc/reflect.go
+//	cmd/link/internal/ld/decodesym.go
+//	runtime/type.go
+type tflag uint8
+
+const (
+	// tflagUncommon means that there is a pointer, *uncommonType,
+	// just beyond the outer type structure.
+	//
+	// For example, if t.Kind() == Struct and t.tflag&amp;tflagUncommon != 0,
+	// then t has uncommonType data and it can be accessed as:
+	//
+	//	type tUncommon struct {
+	//		structType
+	//		u uncommonType
+	//	}
+	//	u := &amp;(*tUncommon)(unsafe.Pointer(t)).u
+	tflagUncommon tflag = 1 &lt;&lt; 0
+
+	// tflagExtraStar means the name in the str field has an
+	// extraneous '*' prefix. This is because for most types T in
+	// a program, the type *T also exists and reusing the str data
+	// saves binary size.
+	tflagExtraStar tflag = 1 &lt;&lt; 1
+
+	// tflagNamed means the type has a name.
+	tflagNamed tflag = 1 &lt;&lt; 2
+)
+</code></pre>
+
+<h2 id="an-uncommontype">An uncommonType</h2>
+
+<p>As mentioned in the previous section, some times can be uncommon types.  So
+what are uncommon types? It turns out that they are more common than you think.
+In Go, any type can have methods associated with it. This is done by the
+example shown below.</p>
+
+<pre><code class="language-go">type T struct{}
+
+func (t T) myMethod()
+</code></pre>
+
+<p>In the code snippet, <code>myMethod</code> is method for the type <code>T</code>. This makes <code>T</code> an
+uncommon type. In other words, uncommon types are types with methods.</p>
+
+<p>Information about the type&rsquo;s methods is defined in the <code>uncommon</code> structure.
+As described in the section above, this structure is located right after the
+type structure. The layout of the <code>uncommonType</code> structure is shown below.  It
+holds information about the import path, the number of methods (total and
+exported), and an offset from this structure to an array of method data
+structures.  This is the current definition of the structure as the release of
+Go 1.13beta1 and its general shape has been like this since the first release
+of Go 1.7. Versions before 1.7 have a very different look.</p>
+
+<pre><code class="language-go">type uncommonType struct {
+	pkgPath nameOff // import path; empty for built-in types like int, string
+	mcount  uint16  // number of methods
+	xcount  uint16  // number of exported methods
+	moff    uint32  // offset from this uncommontype to [mcount]method
+	_       uint32  // unused
+}
+</code></pre>
+
+<p>Go 1.7beta1 was the first release with the new design of this structure. Its
+<code>uncommonType</code> is shown below. It is much smaller than the current one, but it
+essentially holds the same information. This structure definition is unique and
+does not exist any binaries produced by other versions of the Go compiler.</p>
+
+<pre><code class="language-go">type uncommonType struct {
+	pkgPath nameOff // import path; empty for built-in types like int, string
+	mcount  uint16  // number of methods
+	moff    uint16  // offset from this uncommontype to [mcount]method
+}
+</code></pre>
+
+<p>The general shape of the structure was released with the release of Go
+1.7beta2.  It is the same size as the current structure but the <code>xcount</code> field
+is unused.  For extracting the methods, this has no noticeable effect.</p>
+
+<pre><code class="language-go">type uncommonType struct {
+	pkgPath nameOff // import path; empty for built-in types like int, string
+	mcount  uint16  // number of methods
+	_       uint16  // unused
+	moff    uint32  // offset from this uncommontype to [mcount]method
+	_       uint32  // unused
+}
+</code></pre>
+
+<p>One of the fields in the structure, <code>moff</code>, points to an array of <code>method</code>
+structures. The definition of this structure is shown below.</p>
+
+<pre><code class="language-go">// Method on non-interface type
+type method struct {
+	name nameOff // name of method
+	mtyp typeOff // method type (without receiver)
+	ifn  textOff // fn used in interface call (one-word receiver)
+	tfn  textOff // fn used for normal method call
+}
+</code></pre>
+
+<p>The <code>mtyp</code> field is an offset to the function type for the method. It is a
+<code>_type/rtype</code> structure with the kind value of <code>Func</code>. More on this type later.
+Both of the <code>ifn</code> and <code>tfn</code> fields points to offsets in the <em>text</em> section of
+the binary. This where function code is located.</p>
+
+<p>When analyzing real binaries, it turns out that some methods do not have a
+method type or an offset in the text section. Below is an analysis of a binary.
+In the snippet, the method array for <code>*strconv.decimal</code> is walked and the
+values are printed. It can be seen that most of them do not have a method type
+and some of the functions do not have offsets to function code.</p>
+
+<pre><code>*strconv.decimal has 9 methods
+Method 1 name: Assign
+Function at 0x58930 and 0x58930
+Method 2 name: Round
+Function at 0x59170 and 0x59170
+Method 3 name: RoundDown
+Function at 0x592d0 and 0x592d0
+Method 4 name: RoundUp
+Function at 0x59320 and 0x59320
+Method 5 name: RoundedInteger
+Function at 0x0 and 0x0
+Method 6 name: Shift
+Function at 0x590a0 and 0x590a0
+Method 7 name: String
+Method type: func() string
+Function at 0x58310 and 0x58310
+Method 8 name: floatBits
+Function at 0x0 and 0x0
+Method 9 name: set
+Method type: func(string) bool
+Function at 0x0 and 0x0
+</code></pre>
+
+<p>The symbols in the binary, shown below, also confirms that some functions are
+missing.</p>
+
+<pre><code>0x00458720  sym.strconv.__decimal_.String
+0x00458bf0  sym.strconv.__decimal_.Assign
+0x00459130  sym.strconv.__decimal_.Shift
+0x00459200  sym.strconv.__decimal_.Round
+0x004592d0  sym.strconv.__decimal_.RoundUp
+0x00459710  sym.strconv.__extFloat_.FixedDecimal
+0x00459c10  sym.strconv.__extFloat_.ShortestDecimal
+0x0045e210  sym.type..hash.strconv.decimal
+0x0045e270  sym.type..eq.strconv.decimal
+</code></pre>
+
+<p>It turns out that the Go compiler does some
+<a href="https://stackoverflow.com/questions/48688822/will-go-compilers-ignore-unused-functions">pruning</a>
+of methods that are not used. While not all information is always present, the
+name of the method is still available which can be used for further analysis.</p>
+
+<h1 id="some-of-go-types">Some of Go Types</h1>
+
+<p>Each primitive type has a corresponding data type in the runtime. All of these
+data types are structures and the <code>_type</code>/<code>rtype</code> is the first field. It is an
+anonymous field so hence embedded. This means, when parsing the type data, all
+the extra data for the specific type is usually located right after the
+<code>_type</code>/<code>rtype</code> data. The <code>kind</code> field can be used to figure out what type and
+what data will be right after the <code>_type</code>/<code>rtype</code> structure.</p>
+
+<h2 id="struct-type">Struct type</h2>
+
+<p>The <code>structType</code> data type, shown below, is used to store information about
+each type derived from the primitive <code>struct</code> type. It has two extra field,
+<code>pkgPath</code>, and <code>fields</code>. The <code>pkgPath</code> field is the import name of the package
+while the <code>fields</code> is a slice of <code>structField</code>, also shown below, which are
+used to store information about the fields. The <code>structField</code> structure has
+three fields. The first one is the name of the field, the second is a pointer
+to a <code>_type</code>/<code>rtype</code> structure that can be used to determine the type of the
+field, the last is an integer that encodes the offset and if the field is
+embedded/anonymous.</p>
+
+<pre><code class="language-go">// structType represents a struct type.
+type structType struct {
+	rtype
+	pkgPath name
+	fields  []structField // sorted by offset
+}
+
+// Struct field
+type structField struct {
+	name        name    // name is always non-empty
+	typ         *rtype  // type of field
+	offsetEmbed uintptr // byte offset of field&lt;&lt;1 | isEmbedded
+}
+
+func (f *structField) offset() uintptr {
+	return f.offsetEmbed &gt;&gt; 1
+}
+
+func (f *structField) embedded() bool {
+	return f.offsetEmbed&amp;1 != 0
+}
+</code></pre>
+
+<p>If the <code>struct</code> type has some methods attached to it, it is an uncommon type.
+In this scenario, the uncommon data structure is right after the <code>structType</code>
+data as shown below.</p>
+
+<pre><code class="language-go">type structTypeUncommon struct {
+	structType
+	u uncommonType
+}
+</code></pre>
+
+<h2 id="pointer-type">Pointer type</h2>
+
+<p>Pointers to types have their own type called <code>ptrType</code>, it is shown in the
+code block below. It essentially just adds a pointer to a <code>_type</code>/<code>rtype</code> for
+the type it points to. This means, for example, <code>*int</code> and <code>*uint</code> are two
+different types and have their own <code>ptrType</code> structure stored in the binary.</p>
+
+<pre><code class="language-go">// ptrType represents a pointer type.
+type ptrType struct {
+	rtype
+	elem *rtype // pointer element (pointed at) type
+}
+</code></pre>
+
+<p>One note when it comes to methods. If a pointer receiver is used when defining
+a method, as seen in the example below, the methods will be attached to <code>*myThing</code>
+and not <code>myThing</code>.</p>
+
+<pre><code class="language-go">type myThing struct{}
+
+func (m *myThing) DoSomething()
+</code></pre>
+
+<h2 id="interface-type">Interface type</h2>
+
+<p>The data structure for interfaces is simple and is shown below. It has
+essentially two additional fields. One for the import pathname and a slice of
+<code>imethod</code>. The <code>imethod</code> structure, also shown below, provides information
+about the functions that need to be implemented to satisfy the interface. The
+first field in the <code>imethod</code> structure is the name. This is the function name.
+The second field is the offset to a <code>_type</code>/<code>rtype</code> structure. This structure
+is of the &ldquo;kind&rdquo; function and hence provide information about the function
+definition, i.e., types for the function arguments and return values.</p>
+
+<pre><code class="language-go">// interfaceType represents an interface type.
+type interfaceType struct {
+	rtype
+	pkgPath name      // import path
+	methods []imethod // sorted by hash
+}
+
+// imethod represents a method on an interface type
+type imethod struct {
+	name nameOff // name of method
+	typ  typeOff // .(*FuncType) underneath
+}
+</code></pre>
+
+<h2 id="map-type">Map type</h2>
+
+<p>The map type is probably the most complex structures of all the types.  It is
+shown below. It has information about a bunch of sizes that are used under the
+hood. Luckily, this is created by the compiler and the programmer has no
+control over it so it can be ignored. The fields that are of interest are
+<code>key</code> and <code>elem</code>.  By parsing these values, it is possible to reconstruct the
+source code representation of the type definition. The fields are pointers to
+two <code>_type</code>/<code>rtype</code> structures and essentially corresponds to <code>map[key]elem</code>.</p>
+
+<pre><code class="language-go">// mapType represents a map type.
+type mapType struct {
+	rtype
+	key        *rtype // map key type
+	elem       *rtype // map element (value) type
+	bucket     *rtype // internal bucket structure
+	keysize    uint8  // size of key slot
+	valuesize  uint8  // size of value slot
+	bucketsize uint16 // size of bucket
+	flags      uint32
+}
+</code></pre>
+
+<h2 id="slice-and-array-type">Slice and array type</h2>
+
+<p>The slice and array types are very similar, both shown below. The slice type
+information is recorded in the <code>elem</code> field and for arrays, the length is stored
+in the <code>len</code> field.</p>
+
+<pre><code class="language-go">// sliceType represents a slice type.
+type sliceType struct {
+	rtype
+	elem *rtype // slice element type
+}
+
+// arrayType represents a fixed array type.
+type arrayType struct {
+	rtype
+	elem  *rtype // array element type
+	slice *rtype // slice type
+	len   uintptr
+}
+</code></pre>
+
+<h2 id="channel-type">Channel type</h2>
+
+<p>Similar to the array, slice, and map type, the <code>chanType</code> also has a field
+called <code>elem</code> to track what type is sent over the channel. It also has an enum
+to indicate if the channel only can receive, only send, or send and receive.</p>
+
+<pre><code class="language-go">// chanType represents a channel type.
+type chanType struct {
+	rtype
+	elem *rtype  // channel element type
+	dir  uintptr // channel direction (ChanDir)
+}
+</code></pre>
+
+<h2 id="function-type">Function type</h2>
+
+<p>Since functions in Go are first-class citizens, there is also a type
+definition for function types. The following code snippet is taken from the
+standard library describing the type. Since it&rsquo;s possible for all types to have
+methods, making them an <code>uncommonType</code>, function types can also have methods.
+When this happens, the code snippet below describes how the data is stored in
+the binary. The <code>funcType</code> just has two additional fields after the
+<code>rtype</code>/<code>_type</code> structure, a <code>uint16</code> for the number of function arguments and
+a <code>uint16</code> for the number of function return values. The type-information for
+the function arguments and return values are stored in an array right after the
+funcType data structure.</p>
+
+<pre><code class="language-go">// funcType represents a function type.
+//
+// A *rtype for each in and out parameter is stored in an array that
+// directly follows the funcType (and possibly its uncommonType). So
+// a function type with one method, one input, and one output is:
+//
+//	struct {
+//		funcType
+//		uncommonType
+//		[2]*rtype    // [0] is in, [1] is out
+//	}
+type funcType struct {
+	rtype
+	inCount  uint16
+	outCount uint16 // top bit is set if last input parameter is ...
+}
+</code></pre>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>All the types used by a Go application are stored within a <em>types</em> section inside
+the binary. By parsing this data structure, it is possible to fully recover all
+the function definitions. This includes private types and fields.</p>
+
+      </div>
+
+      <footer>
+        
+
+
+        
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    
+      <p>All rights reserved</p>
+    
+     © 2019
+    
+    
+  </section>
+</footer>
+
+    </main>
+
+    
+
+  </body>
+
+</html>
