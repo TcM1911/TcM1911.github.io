@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>malware on Playhouse</title>
-    <link>/tags/malware/</link>
-    <description>Recent content in malware on Playhouse</description>
+    <title>go_under_the_hood on Playhouse</title>
+    <link>/tags/go_under_the_hood/</link>
+    <description>Recent content in go_under_the_hood on Playhouse</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Sun, 06 Oct 2019 21:01:26 +0100</lastBuildDate>
     
-	<atom:link href="/tags/malware/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/tags/go_under_the_hood/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -21,16 +21,6 @@
 Here is a set of analysis notes for version two of the family. The sample used for the analysis has the hash of 99d19dd82330a1c437a64e7ca9896ad9d914de10c4f7aa2222b1a5bc4750f692
 Malware overview Version two of the Eris ransomware are made up of six packages.
  Sync package used to collect victim information and send it to the operator.</description>
-    </item>
-    
-    <item>
-      <title>Malware Analysis using Malboxes</title>
-      <link>/posts/malware-analysis-using-malboxes/</link>
-      <pubDate>Mon, 30 Apr 2018 10:59:00 +0100</pubDate>
-      
-      <guid>/posts/malware-analysis-using-malboxes/</guid>
-      <description>A while back I came across two projects that automate the creation of virtual machines for malware analysis. The original open source project what uses Packer and Vagrant to bootstrap a malware lab can be found here. As part of this blog post, I will instead use malboxes from GoSecure as it suits my need more.
-Malboxes creates a Windows VM template using packer. The template will have tools installed.</description>
     </item>
     
   </channel>

@@ -6,7 +6,7 @@
     <description>Recent content in Tags on Playhouse</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 23 Jun 2019 00:00:00 +0100</lastBuildDate>
+    <lastBuildDate>Sun, 06 Oct 2019 21:01:26 +0100</lastBuildDate>
     
 	<atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
     
@@ -14,9 +14,36 @@
     <item>
       <title>go</title>
       <link>/tags/go/</link>
-      <pubDate>Sun, 23 Jun 2019 00:00:00 +0100</pubDate>
+      <pubDate>Sun, 06 Oct 2019 21:01:26 +0100</pubDate>
       
       <guid>/tags/go/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>go_under_the_hood</title>
+      <link>/tags/go_under_the_hood/</link>
+      <pubDate>Sun, 06 Oct 2019 21:01:26 +0100</pubDate>
+      
+      <guid>/tags/go_under_the_hood/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>malware</title>
+      <link>/tags/malware/</link>
+      <pubDate>Sun, 06 Oct 2019 21:01:26 +0100</pubDate>
+      
+      <guid>/tags/malware/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>ransomware</title>
+      <link>/tags/ransomware/</link>
+      <pubDate>Sun, 06 Oct 2019 21:01:26 +0100</pubDate>
+      
+      <guid>/tags/ransomware/</guid>
       <description></description>
     </item>
     
@@ -62,15 +89,6 @@
       <pubDate>Sat, 09 Jun 2018 20:37:47 +0000</pubDate>
       
       <guid>/tags/yara/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>malware</title>
-      <link>/tags/malware/</link>
-      <pubDate>Mon, 30 Apr 2018 10:59:00 +0100</pubDate>
-      
-      <guid>/tags/malware/</guid>
       <description></description>
     </item>
     

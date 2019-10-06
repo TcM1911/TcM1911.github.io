@@ -3,32 +3,52 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>/tags/go/</loc>
+    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/posts/go-under-the-hood-eris/</loc>
+    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/go_under_the_hood/</loc>
+    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/malware/</loc>
+    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/</loc>
+    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/posts/</loc>
+    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/ransomware/</loc>
+    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/</loc>
+    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/posts/extracting-go-types/</loc>
     <lastmod>2019-09-15T00:00:00+01:00</lastmod>
   </url>
   
   <url>
-    <loc>/</loc>
-    <lastmod>2019-09-15T00:00:00+01:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/posts/</loc>
-    <lastmod>2019-09-15T00:00:00+01:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/tags/go/</loc>
-    <lastmod>2019-06-23T00:00:00+01:00</lastmod>
-  </url>
-  
-  <url>
     <loc>/tags/reverse_engineering/</loc>
-    <lastmod>2019-06-23T00:00:00+01:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/tags/</loc>
     <lastmod>2019-06-23T00:00:00+01:00</lastmod>
   </url>
   
@@ -75,11 +95,6 @@
   <url>
     <loc>/tags/yara/</loc>
     <lastmod>2018-06-09T20:37:47+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/tags/malware/</loc>
-    <lastmod>2018-04-30T10:59:00+01:00</lastmod>
   </url>
   
   <url>

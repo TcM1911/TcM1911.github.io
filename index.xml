@@ -6,10 +6,22 @@
     <description>Recent content on Playhouse</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 15 Sep 2019 00:00:00 +0100</lastBuildDate>
+    <lastBuildDate>Sun, 06 Oct 2019 21:01:26 +0100</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Go under the hood: Eris Ransomware</title>
+      <link>/posts/go-under-the-hood-eris/</link>
+      <pubDate>Sun, 06 Oct 2019 21:01:26 +0100</pubDate>
+      
+      <guid>/posts/go-under-the-hood-eris/</guid>
+      <description>Eris ransomware was first discovered in May 2019. In July it was reported by Bleeping Computer that the malware was being distributed by the RIG exploit kit.
+Here is a set of analysis notes for version two of the family. The sample used for the analysis has the hash of 99d19dd82330a1c437a64e7ca9896ad9d914de10c4f7aa2222b1a5bc4750f692
+Malware overview Version two of the Eris ransomware are made up of six packages.
+ Sync package used to collect victim information and send it to the operator.</description>
+    </item>
     
     <item>
       <title>Extracting type-information from a Go binary</title>
