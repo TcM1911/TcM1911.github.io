@@ -17,8 +17,8 @@
 <meta property="og:description" content="Binaries compiled with the Go compiler includes a large set of metadata. This metadata can be used to assist static analysis of stripped binaries. Stripped binaries, especially statically compiled, are hard to analyze. Since the symbols have been removed and the huge number of subroutines, hello world binary in Go have thousands of subroutines, it can be very time-consuming. Fortunately, the metadata in the binary can be used to reconstruct symbols and also recover information about the source code layout. One of the things that can be recovered is function information." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="/posts/pclntab-function-recovery/" />
-<meta property="article:published_time" content="2019-06-23T00:00:00+01:00" />
-<meta property="article:modified_time" content="2019-06-23T00:00:00+01:00" />
+<meta property="article:published_time" content="2019-06-23T00:00:00&#43;01:00"/>
+<meta property="article:modified_time" content="2019-06-23T00:00:00&#43;01:00"/>
 
 
     
@@ -53,7 +53,7 @@
     <link rel="icon" type="image/png" href="../../images/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../../images/favicon-16x16.png" sizes="16x16">
 
-    <meta name="generator" content="Hugo 0.58.3" />
+    <meta name="generator" content="Hugo 0.54.0" />
   </head>
 
   <body class=" ">
@@ -393,8 +393,8 @@ have found a good candidate for the <code>pclntab</code> in the file. Essentiall
 <ol>
 <li>Search the binary for the magic bytes.</li>
 <li>Check the match by performing similar checks as the <code>go12init</code> function.</li>
-
-<li><p>If the checks pass it is probably the <code>pclntab</code>. If not, back to <em>1</em>.</p>
+<li>If the checks pass it is probably the <code>pclntab</code>. If not, back to <em>1</em>.</li>
+</ol>
 
 <pre><code class="language-go">const go12magic = 0xfffffffb
 
@@ -428,8 +428,7 @@ func (t *LineTable) go12Init() {
 	default:
 		return
 	}
-</code></pre></li>
-</ol>
+</code></pre>
 
 <h2 id="construct-a-hypothetical-source-tree-summary">Construct a hypothetical source tree summary</h2>
 
@@ -807,7 +806,7 @@ identical.</p>
     
       <p>All rights reserved</p>
     
-     © 2019
+     © 2020
     
     
   </section>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Keybase on Playhouse</title>
+    <link>/tags/keybase/</link>
+    <description>Recent content in Keybase on Playhouse</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 09 Feb 2020 12:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/keybase/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Building Keybase for Raspberry Pi</title>
+      <link>/posts/keybase-rpi/</link>
+      <pubDate>Sun, 09 Feb 2020 12:00:00 +0000</pubDate>
+      
+      <guid>/posts/keybase-rpi/</guid>
+      <description>The Raspberry Pi 4 is a nice little powerful device. The official Linux distribution for the Pi, Raspbian. Unfortunately, it doesn’t have any prebuilt binaries for Keybase. Neither are they provided by Keybase themselves. Luckily, building it from the source is relatively painless. With the new more powerful version 4 of the pi, the time it takes is somewhat reasonable.
+The goal of this blog post is to show how to set up a build environment that doesn&amp;rsquo;t require root access to the machine.</description>
+    </item>
+    
+  </channel>
+</rss>

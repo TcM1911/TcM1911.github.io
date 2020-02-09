@@ -3,8 +3,8 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>/tags/go/</loc>
-    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
+    <loc>/posts/keybase-rpi/</loc>
+    <lastmod>2020-02-09T12:00:00+00:00</lastmod>
   </url>
   
   <url>
@@ -13,43 +13,8 @@
   </url>
   
   <url>
-    <loc>/tags/go_under_the_hood/</loc>
-    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/tags/malware/</loc>
-    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/</loc>
-    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/posts/</loc>
-    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/tags/ransomware/</loc>
-    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/tags/</loc>
-    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
-  </url>
-  
-  <url>
     <loc>/posts/extracting-go-types/</loc>
     <lastmod>2019-09-15T00:00:00+01:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/tags/reverse_engineering/</loc>
-    <lastmod>2019-06-23T00:00:00+01:00</lastmod>
   </url>
   
   <url>
@@ -68,16 +33,6 @@
   </url>
   
   <url>
-    <loc>/tags/hacks/</loc>
-    <lastmod>2019-03-17T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/tags/red_team/</loc>
-    <lastmod>2019-03-17T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>/posts/whois-and-finger-reverse-shell/</loc>
     <lastmod>2018-09-01T00:00:00+00:00</lastmod>
   </url>
@@ -88,27 +43,97 @@
   </url>
   
   <url>
-    <loc>/tags/r2/</loc>
-    <lastmod>2018-06-09T20:37:47+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/tags/yara/</loc>
-    <lastmod>2018-06-09T20:37:47+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>/posts/malware-analysis-using-malboxes/</loc>
     <lastmod>2018-04-30T10:59:00+01:00</lastmod>
   </url>
   
   <url>
-    <loc>/about/</loc>
-    <lastmod>2018-04-17T23:11:43+01:00</lastmod>
+    <loc>/categories/</loc>
+    <priority>0</priority>
   </url>
   
   <url>
-    <loc>/categories/</loc>
+    <loc>/tags/go/</loc>
+    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/go_under_the_hood/</loc>
+    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/hacks/</loc>
+    <lastmod>2019-03-17T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/keybase/</loc>
+    <lastmod>2020-02-09T12:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/malware/</loc>
+    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/</loc>
+    <lastmod>2020-02-09T12:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/posts/</loc>
+    <lastmod>2020-02-09T12:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/r2/</loc>
+    <lastmod>2018-06-09T20:37:47+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/ransomware/</loc>
+    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/raspberry_pi/</loc>
+    <lastmod>2020-02-09T12:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/red_team/</loc>
+    <lastmod>2019-03-17T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/reverse_engineering/</loc>
+    <lastmod>2019-06-23T00:00:00+01:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/</loc>
+    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/yara/</loc>
+    <lastmod>2018-06-09T20:37:47+00:00</lastmod>
+    <priority>0</priority>
   </url>
   
 </urlset>
