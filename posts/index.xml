@@ -22,7 +22,7 @@ The goal of this blog post is to show how to set up a build environment that doe
     </item>
     
     <item>
-      <title>Go under the hood: Eris Ransomware</title>
+      <title>Go Under the Hood: Eris Ransomware</title>
       <link>/posts/go-under-the-hood-eris/</link>
       <pubDate>Sun, 06 Oct 2019 21:01:26 +0100</pubDate>
       
@@ -34,7 +34,7 @@ Malware overview Version two of the Eris ransomware are made up of six packages.
     </item>
     
     <item>
-      <title>Extracting type-information from a Go binary</title>
+      <title>Extracting Type Information from a Go Binary</title>
       <link>/posts/extracting-go-types/</link>
       <pubDate>Sun, 15 Sep 2019 00:00:00 +0100</pubDate>
       
@@ -61,7 +61,7 @@ Malware overview Version two of the Eris ransomware are made up of six packages.
     </item>
     
     <item>
-      <title>Backdoor on windows with finger</title>
+      <title>Backdoor on Windows with Finger</title>
       <link>/posts/finger-windows-backdoor/</link>
       <pubDate>Sun, 17 Mar 2019 00:00:00 +0000</pubDate>
       
@@ -71,7 +71,7 @@ Finger comes pre-installed on Windows. According to Microsoft&amp;rsquo;s docume
     </item>
     
     <item>
-      <title>Using Whois and Finger for reverse shells</title>
+      <title>Using Whois and Finger for Reverse Shells</title>
       <link>/posts/whois-and-finger-reverse-shell/</link>
       <pubDate>Sat, 01 Sep 2018 00:00:00 +0000</pubDate>
       
@@ -81,7 +81,7 @@ The Whois protocol The whois protocol is very simple TCP-based query/response pr
     </item>
     
     <item>
-      <title>Create YARA Rules With Radare</title>
+      <title>Create YARA Rules with Radare</title>
       <link>/posts/create-yara-rules-with-radare/</link>
       <pubDate>Sat, 09 Jun 2018 20:37:47 +0000</pubDate>
       
