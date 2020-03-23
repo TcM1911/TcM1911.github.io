@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>/posts/go-under-the-hood-orthrus/</loc>
+    <lastmod>2020-03-23T18:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/posts/keybase-rpi/</loc>
     <lastmod>2020-02-09T12:00:00+00:00</lastmod>
   </url>
@@ -54,13 +59,13 @@
   
   <url>
     <loc>/tags/go/</loc>
-    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
+    <lastmod>2020-03-23T18:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/tags/go_under_the_hood/</loc>
-    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
+    <lastmod>2020-03-23T18:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -78,19 +83,25 @@
   
   <url>
     <loc>/tags/malware/</loc>
-    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
+    <lastmod>2020-03-23T18:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/mining/</loc>
+    <lastmod>2020-03-23T18:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/</loc>
-    <lastmod>2020-02-09T12:00:00+00:00</lastmod>
+    <lastmod>2020-03-23T18:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/posts/</loc>
-    <lastmod>2020-02-09T12:00:00+00:00</lastmod>
+    <lastmod>2020-03-23T18:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -126,7 +137,7 @@
   
   <url>
     <loc>/tags/</loc>
-    <lastmod>2019-10-06T21:01:26+01:00</lastmod>
+    <lastmod>2020-03-23T18:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   

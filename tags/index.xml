@@ -6,7 +6,7 @@
     <description>Recent content in Tags on Playhouse</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 06 Oct 2019 21:01:26 +0100</lastBuildDate>
+    <lastBuildDate>Mon, 23 Mar 2020 18:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
     
@@ -14,7 +14,7 @@
     <item>
       <title>Go</title>
       <link>/tags/go/</link>
-      <pubDate>Sun, 06 Oct 2019 21:01:26 +0100</pubDate>
+      <pubDate>Mon, 23 Mar 2020 18:00:00 +0000</pubDate>
       
       <guid>/tags/go/</guid>
       <description></description>
@@ -23,7 +23,7 @@
     <item>
       <title>Go_under_the_hood</title>
       <link>/tags/go_under_the_hood/</link>
-      <pubDate>Sun, 06 Oct 2019 21:01:26 +0100</pubDate>
+      <pubDate>Mon, 23 Mar 2020 18:00:00 +0000</pubDate>
       
       <guid>/tags/go_under_the_hood/</guid>
       <description></description>
@@ -50,9 +50,18 @@
     <item>
       <title>Malware</title>
       <link>/tags/malware/</link>
-      <pubDate>Sun, 06 Oct 2019 21:01:26 +0100</pubDate>
+      <pubDate>Mon, 23 Mar 2020 18:00:00 +0000</pubDate>
       
       <guid>/tags/malware/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Mining</title>
+      <link>/tags/mining/</link>
+      <pubDate>Mon, 23 Mar 2020 18:00:00 +0000</pubDate>
+      
+      <guid>/tags/mining/</guid>
       <description></description>
     </item>
     
