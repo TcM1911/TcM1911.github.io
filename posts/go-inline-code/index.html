@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="Joakim Kennedy">
+    <meta name="description" content="A place I share my thoughts and play with stuff">
+    <meta name="keywords" content="blog,developer,hacks,security,malware">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Tackle Inline Go Functions"/>
+<meta name="twitter:description" content="Within the last few releases, the Go compiler has gotten better at inlining smaller functions. This can sometimes make it harder when analyzing an unknown Go binary with a disassembler. Instead of seeing a call to a documented library function, the library function&#39;s code has been &#34;merged&#34; with the caller and it is easy to waste time trying to decipher the library code when just reading the documentation would have been faster."/>
+
+    <meta property="og:title" content="Tackle Inline Go Functions" />
+<meta property="og:description" content="Within the last few releases, the Go compiler has gotten better at inlining smaller functions. This can sometimes make it harder when analyzing an unknown Go binary with a disassembler. Instead of seeing a call to a documented library function, the library function&#39;s code has been &#34;merged&#34; with the caller and it is easy to waste time trying to decipher the library code when just reading the documentation would have been faster." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/posts/go-inline-code/" />
+<meta property="article:published_time" content="2021-01-02T12:00:00+00:00" />
+<meta property="article:modified_time" content="2021-01-02T12:00:00+00:00" />
+
+
+    
+      <base href="../../posts/go-inline-code/">
+    
+    <title>
+  Tackle Inline Go Functions · Playhouse
+</title>
+
+    
+      <link rel="canonical" href="../../posts/go-inline-code/">
+    
+
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700%7CMerriweather:300,700%7CSource+Code+Pro:400,700" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous" />
+
+    
+      
+      
+      <link rel="stylesheet" href="../../css/coder.min.28d751104f30c16da1aa1bb04015cbe662cacfe0d1b01af4f2240ad58580069c.css" integrity="sha256-KNdREE8wwW2hqhuwQBXL5mLKz&#43;DRsBr08iQK1YWABpw=" crossorigin="anonymous" media="screen" />
+    
+
+    
+
+    
+
+    
+
+    
+    
+    <link rel="icon" type="image/png" href="../../images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="../../images/favicon-16x16.png" sizes="16x16">
+
+    <meta name="generator" content="Hugo 0.80.0" />
+  </head>
+
+  <body class=" ">
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="../../">
+      Playhouse
+    </a>
+    <input type="checkbox" id="menu-toggle" />
+    <label class="menu-button float-right" for="menu-toggle"><i class="fas fa-bars"></i></label>
+    <ul class="navigation-list">
+      
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="../../posts/">Blog</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://go-re.tk">Go Reverse Engineering Tool Kit</a>
+          </li>
+        
+      
+      
+    </ul>
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">Tackle Inline Go Functions</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fas fa-calendar"></i>
+              <time datetime='2021-01-02T12:00:00Z'>
+                January 2, 2021
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fas fa-clock"></i>
+              6 minutes read
+            </span>
+          </div>
+          
+          <div class="tags">
+  <i class="fas fa-tag"></i>
+    <a href="../../tags/go/">go</a>
+      <span class="separator">•</span>
+    <a href="../../tags/reverse_engineering/">reverse_engineering</a>
+      <span class="separator">•</span>
+    <a href="../../tags/r2/">r2</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        <h1 id="the-problem">The Problem</h1>
+<p>Within the last few releases, the Go compiler has gotten better at inlining
+smaller functions. This can sometimes make it harder when analyzing an unknown
+Go binary with a disassembler. Instead of seeing a call to a documented library
+function, the library function&rsquo;s code has been &ldquo;merged&rdquo; with the caller and it
+is easy to waste time trying to decipher the library code when just reading the
+documentation would have been faster. The code snippet below shows a standard
+<em>Hello World</em> example in Go.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+
+<span style="color:#f92672">import</span> (
+	<span style="color:#e6db74">&#34;fmt&#34;</span>
+)
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Hello, World&#34;</span>)
+}
+</code></pre></div><p>If we look at the assembly code generated, the snippet below, we can see that
+there is no call to <code>fmt.Println</code>. The string to be printed is loaded into
+<code>rax</code> and moved to the stack location <code>var_40h</code>. Instead of seeing a
+preparation for a call to <code>fmt.Println</code>, a preparation for <code>fmt.Fprintln</code> is
+seen.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#a6e22e">cmp</span> <span style="color:#66d9ef">rsp</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">rcx</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#ae81ff">0x10</span>]
+<span style="color:#a6e22e">sub</span> <span style="color:#66d9ef">rsp</span>, <span style="color:#ae81ff">0x58</span>
+<span style="color:#a6e22e">lea</span> <span style="color:#66d9ef">rbp</span>, [<span style="color:#66d9ef">var_50h</span>]
+<span style="color:#a6e22e">movups</span> <span style="color:#66d9ef">xmmword</span> [<span style="color:#66d9ef">var_40h</span>], <span style="color:#66d9ef">xmm0</span>
+<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_40h</span>], <span style="color:#66d9ef">rax</span>
+<span style="color:#a6e22e">lea</span> <span style="color:#66d9ef">rax</span>, [<span style="color:#ae81ff">0x010eaa80</span>] <span style="color:#75715e">; &#34;Hello, World&#34;
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_48h</span>], <span style="color:#66d9ef">rax</span>
+<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">sym._os.Stdout</span>]
+<span style="color:#a6e22e">lea</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#66d9ef">sym._go.itab._os.File_io.Writer</span>
+<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">rsp</span>], <span style="color:#66d9ef">rcx</span>
+<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_8h</span>], <span style="color:#66d9ef">rax</span>
+<span style="color:#a6e22e">lea</span> <span style="color:#66d9ef">rax</span>, [<span style="color:#66d9ef">var_40h</span>]
+<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_10h</span>], <span style="color:#66d9ef">rax</span>
+<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_18h</span>], <span style="color:#ae81ff">1</span>
+<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_20h</span>], <span style="color:#ae81ff">1</span>
+<span style="color:#a6e22e">call</span> <span style="color:#66d9ef">sym._fmt.Fprintln</span>
+<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">rbp</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_50h</span>]
+<span style="color:#a6e22e">add</span> <span style="color:#66d9ef">rsp</span>, <span style="color:#ae81ff">0x58</span>
+<span style="color:#a6e22e">ret</span>
+<span style="color:#a6e22e">nop</span>
+<span style="color:#a6e22e">call</span> <span style="color:#66d9ef">sym._runtime.morestack_noctxt</span>
+<span style="color:#a6e22e">jmp</span> <span style="color:#66d9ef">sym._main.main</span>
+</code></pre></div><p>In the <em>Hello World</em> scenario, it may not be too hard to identify where the
+code-inlining has happened. When the inlined code doesn&rsquo;t perform any other
+calls and just bit operations, it can be a bit harder to work with.</p>
+<p>The code snippet below is taken from a suspicious binary I analyzed a few
+months back. I have annotated the function calls with their function signature.
+On the first line, we can see a call to the function <code>Now()</code> in the <code>time</code>
+package. This function returns an exported structure called <code>Time</code>. On the last
+line, we can see a call to the method <code>Seed</code> and that it takes an <code>int64</code>. I
+don&rsquo;t think it would be too much of a stretch to guess that the bit operations
+between the two calls are converting the data stored in the <code>Time</code> struct to an
+<code>int64</code>.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#a6e22e">call</span> <span style="color:#66d9ef">fcn.time.Now</span> <span style="color:#75715e">; func Now() Time
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_8h</span>]
+<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">rsp</span>]
+<span style="color:#a6e22e">bt</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#ae81ff">0x3f</span>
+<span style="color:#a6e22e">jae</span> <span style="color:#ae81ff">0x4f6216</span>
+<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">rcx</span>
+<span style="color:#a6e22e">shl</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#ae81ff">1</span>
+<span style="color:#a6e22e">shr</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#ae81ff">0x1f</span>
+<span style="color:#a6e22e">movabs</span> <span style="color:#66d9ef">rdx</span>, <span style="color:#ae81ff">0xdd7b17f80</span>
+<span style="color:#a6e22e">add</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#66d9ef">rdx</span>
+<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">rdx</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#ae81ff">0x00673338</span>]
+<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">rsp</span>], <span style="color:#66d9ef">rdx</span>
+<span style="color:#a6e22e">imul</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#66d9ef">rcx</span>, <span style="color:#ae81ff">0x3b9aca00</span>
+<span style="color:#a6e22e">and</span> <span style="color:#66d9ef">rax</span>, <span style="color:#ae81ff">0x3fffffff</span>
+<span style="color:#a6e22e">movsxd</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">eax</span>
+<span style="color:#a6e22e">add</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">rcx</span>
+<span style="color:#a6e22e">movabs</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#ae81ff">0xa1b203eb3d1a0000</span>
+<span style="color:#a6e22e">add</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">rcx</span>
+<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_8h</span>], <span style="color:#66d9ef">rax</span>
+<span style="color:#a6e22e">call</span> <span style="color:#66d9ef">fcn.math_rand___Rand_.Seed</span> <span style="color:#75715e">; func (r *Rand) Seed(seed int64)
+</span></code></pre></div><p>If we take a look at the documentation for the <code>time</code> package, we can see that
+there are two methods for the <code>Time</code> struct that returns an <code>int64</code>.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">% go doc time.Time | grep int64
+func Unix<span style="color:#f92672">(</span>sec int64, nsec int64<span style="color:#f92672">)</span> Time
+func <span style="color:#f92672">(</span>t Time<span style="color:#f92672">)</span> Unix<span style="color:#f92672">()</span> int64
+func <span style="color:#f92672">(</span>t Time<span style="color:#f92672">)</span> UnixNano<span style="color:#f92672">()</span> int64
+</code></pre></div><h1 id="the-solution">The Solution</h1>
+<p>Go binaries contain a data table called <em>PCLNTab</em>. This table was described in
+an <a href="../../posts/pclntab-function-recovery">earlier post</a> but in short, it
+provides a translation between source code line numbers and process counters.
+<em>GoRE</em> provides access to this table via the method <code>PCLNTab</code>. The returned
+value is a pointer to the <code>gosym.Table</code> type, as can be seen in the function
+signature below.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">f</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">GoFile</span>) <span style="color:#a6e22e">PCLNTab</span>() (<span style="color:#f92672">*</span><span style="color:#a6e22e">gosym</span>.<span style="color:#a6e22e">Table</span>, <span style="color:#66d9ef">error</span>)
+</code></pre></div><p>This type has a set of methods that takes an instruction offset and returns
+information from it. The snippet shown below is part of the documentation for
+two of these methods. From the offset of the instruction, we can get the
+function, filename, and line number.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Table</span>) <span style="color:#a6e22e">PCToLine</span>(<span style="color:#a6e22e">pc</span> <span style="color:#66d9ef">uint64</span>) (<span style="color:#a6e22e">file</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">line</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">fn</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Func</span>)
+    <span style="color:#a6e22e">PCToLine</span> <span style="color:#a6e22e">looks</span> <span style="color:#a6e22e">up</span> <span style="color:#a6e22e">line</span> <span style="color:#a6e22e">number</span> <span style="color:#a6e22e">information</span> <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">a</span> <span style="color:#a6e22e">program</span> <span style="color:#a6e22e">counter</span>. <span style="color:#a6e22e">If</span> <span style="color:#a6e22e">there</span> <span style="color:#a6e22e">is</span>
+    <span style="color:#a6e22e">no</span> <span style="color:#a6e22e">information</span>, <span style="color:#a6e22e">it</span> <span style="color:#a6e22e">returns</span> <span style="color:#a6e22e">fn</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span>.
+
+<span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Table</span>) <span style="color:#a6e22e">PCToFunc</span>(<span style="color:#a6e22e">pc</span> <span style="color:#66d9ef">uint64</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">Func</span>
+    <span style="color:#a6e22e">PCToFunc</span> <span style="color:#a6e22e">returns</span> <span style="color:#a6e22e">the</span> <span style="color:#a6e22e">function</span> <span style="color:#a6e22e">containing</span> <span style="color:#a6e22e">the</span> <span style="color:#a6e22e">program</span> <span style="color:#a6e22e">counter</span> <span style="color:#a6e22e">pc</span>, <span style="color:#a6e22e">or</span> <span style="color:#66d9ef">nil</span> <span style="color:#66d9ef">if</span>
+    <span style="color:#a6e22e">there</span> <span style="color:#a6e22e">is</span> <span style="color:#a6e22e">no</span> <span style="color:#a6e22e">such</span> <span style="color:#a6e22e">function</span>.
+</code></pre></div><p>Using this information, it&rsquo;s trivial to implement some logic that annotates the
+filename and line number within <em>radare2</em>. The code snippet below is one way of
+implementing it. The function takes a handler to an active session of <em>radare2</em>
+and a handler to the file that is being analyzed. The current function and the
+<em>PCLNTab</em> are extracted. Next, all the instructions within the function are
+iterated through. For each instruction, the filename and line number are looked
+up. If both of these values are the same as the previous instruction, the
+instruction is skipped. If either of these values is different, a comment is
+created that annotates the filename and line number.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">srcLineInfo</span>(<span style="color:#a6e22e">r2</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">r2g2</span>.<span style="color:#a6e22e">Client</span>, <span style="color:#a6e22e">file</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">gore</span>.<span style="color:#a6e22e">GoFile</span>) {
+	<span style="color:#a6e22e">fn</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">r2</span>.<span style="color:#a6e22e">GetCurrentFunction</span>()
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Failed to get current function: %s.\n&#34;</span>, <span style="color:#a6e22e">err</span>)
+		<span style="color:#66d9ef">return</span>
+	}
+
+	<span style="color:#a6e22e">tbl</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">PCLNTab</span>()
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Failed to get lookup table: %s.\n&#34;</span>, <span style="color:#a6e22e">err</span>)
+		<span style="color:#66d9ef">return</span>
+	}
+
+	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">curFile</span> <span style="color:#66d9ef">string</span>
+	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">curLine</span> <span style="color:#66d9ef">int</span>
+	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">pc</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">fn</span>.<span style="color:#a6e22e">Ops</span> {
+		<span style="color:#a6e22e">fileStr</span>, <span style="color:#a6e22e">line</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">tbl</span>.<span style="color:#a6e22e">PCToLine</span>(<span style="color:#a6e22e">pc</span>.<span style="color:#a6e22e">Offset</span>)
+
+		<span style="color:#75715e">// Check if on the same source line.
+</span><span style="color:#75715e"></span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">line</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">curLine</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">fileStr</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">curFile</span> {
+			<span style="color:#66d9ef">continue</span>
+		}
+		<span style="color:#a6e22e">curLine</span> = <span style="color:#a6e22e">line</span>
+		<span style="color:#a6e22e">curFile</span> = <span style="color:#a6e22e">fileStr</span>
+
+		<span style="color:#75715e">// Add line as multiline comment.
+</span><span style="color:#75715e"></span>		<span style="color:#a6e22e">comment</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;%s:%d&#34;</span>, <span style="color:#a6e22e">fileStr</span>, <span style="color:#a6e22e">line</span>)
+		<span style="color:#a6e22e">encodedComment</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">base64</span>.<span style="color:#a6e22e">StdEncoding</span>.<span style="color:#a6e22e">EncodeToString</span>([]byte(<span style="color:#a6e22e">comment</span>))
+
+		<span style="color:#75715e">// Execute command.
+</span><span style="color:#75715e"></span>		<span style="color:#a6e22e">cmd</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;CCu base64:%s @ 0x%x&#34;</span>, <span style="color:#a6e22e">encodedComment</span>, <span style="color:#a6e22e">pc</span>.<span style="color:#a6e22e">Offset</span>)
+		<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">r2</span>.<span style="color:#a6e22e">Run</span>(<span style="color:#a6e22e">cmd</span>)
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+			<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Error when adding comment:&#34;</span>, <span style="color:#a6e22e">err</span>)
+			<span style="color:#66d9ef">return</span>
+		}
+	}
+}
+</code></pre></div><p>If we look back to the code snippet from earlier where we were trying to figure
+out which function was inlined and add the line numbers, it becomes easier to
+figure this out. Except for the first and last instructions, the rest of this
+code is from the standard library.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#a6e22e">call</span> <span style="color:#66d9ef">fcn.time.Now</span> <span style="color:#75715e">; src/Lock/internal/payload/payloadutil/payloadutil.go:16
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_8h</span>]
+<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">rsp</span>]
+<span style="color:#a6e22e">bt</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#ae81ff">0x3f</span> <span style="color:#75715e">; /usr/local/go/src/time/time.go:169
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">jae</span> <span style="color:#ae81ff">0x4f6216</span>
+<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">rcx</span> <span style="color:#75715e">; /usr/local/go/src/time/time.go:170
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">shl</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#ae81ff">1</span>
+<span style="color:#a6e22e">shr</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#ae81ff">0x1f</span>
+<span style="color:#a6e22e">movabs</span> <span style="color:#66d9ef">rdx</span>, <span style="color:#ae81ff">0xdd7b17f80</span>
+<span style="color:#a6e22e">add</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#66d9ef">rdx</span>
+<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">rdx</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#ae81ff">0x00673338</span>] <span style="color:#75715e">; /usr/local/go/src/math/rand/rand.go:303
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">rsp</span>], <span style="color:#66d9ef">rdx</span>
+<span style="color:#a6e22e">imul</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#66d9ef">rcx</span>, <span style="color:#ae81ff">0x3b9aca00</span> <span style="color:#75715e">; /usr/local/go/src/time/time.go:1165
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">and</span> <span style="color:#66d9ef">rax</span>, <span style="color:#ae81ff">0x3fffffff</span> <span style="color:#75715e">; /usr/local/go/src/time/time.go:164
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">movsxd</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">eax</span> <span style="color:#75715e">; /usr/local/go/src/time/time.go:1165
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">add</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">rcx</span>
+<span style="color:#a6e22e">movabs</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#ae81ff">0xa1b203eb3d1a0000</span>
+<span style="color:#a6e22e">add</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">rcx</span>
+<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_8h</span>], <span style="color:#66d9ef">rax</span> <span style="color:#75715e">; /usr/local/go/src/math/rand/rand.go:303
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">call</span> <span style="color:#66d9ef">fcn.math_rand___Rand_.Seed</span>
+<span style="color:#a6e22e">lea</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">sym.type.uint8</span> <span style="color:#75715e">; src/Lock/internal/payload/payloadutil/payloadutil.go:17
+</span></code></pre></div><p>This allows us to look at the <a href="https://github.com/golang/go/blob/go1.14.2/src/time/time.go">source
+code</a> for the
+times package to figure out which function was called. Lines 167 to 173 in the
+<code>time.go</code> file is the following code:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// sec returns the time&#39;s seconds since Jan 1 year 1.
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Time</span>) <span style="color:#a6e22e">sec</span>() <span style="color:#66d9ef">int64</span> {
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">wall</span><span style="color:#f92672">&amp;</span><span style="color:#a6e22e">hasMonotonic</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span> {
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">wallToInternal</span> <span style="color:#f92672">+</span> int64(<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">wall</span><span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">1</span><span style="color:#f92672">&gt;&gt;</span>(<span style="color:#a6e22e">nsecShift</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>))
+	}
+	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">ext</span>
+}
+</code></pre></div><p>Lines 162 to 165 in the same file has this code:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// nsec returns the time&#39;s nanoseconds.
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Time</span>) <span style="color:#a6e22e">nsec</span>() <span style="color:#66d9ef">int32</span> {
+	<span style="color:#66d9ef">return</span> int32(<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">wall</span> <span style="color:#f92672">&amp;</span> <span style="color:#a6e22e">nsecMask</span>)
+}
+</code></pre></div><p>Finally, lines 1164 to 1166 has this:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">t</span> <span style="color:#a6e22e">Time</span>) <span style="color:#a6e22e">UnixNano</span>() <span style="color:#66d9ef">int64</span> {
+	<span style="color:#66d9ef">return</span> (<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">unixSec</span>())<span style="color:#f92672">*</span><span style="color:#ae81ff">1e9</span> <span style="color:#f92672">+</span> int64(<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">nsec</span>())
+}
+</code></pre></div><p>With this information, it&rsquo;s straightforward to conclude that the inlined code
+is the method <code>UnixNano</code>.</p>
+<p>This functionality has been added as part of <em>redress</em> <a href="https://github.com/goretk/redress/releases/tag/v0.7.0">version 0.7.0</a>,
+just execute <code>#!pipe redress -line</code> from within radare2.</p>
+
+      </div>
+
+      <footer>
+        
+
+
+        
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    
+      <p>All rights reserved</p>
+    
+     © 2021
+    
+    
+  </section>
+</footer>
+
+    </main>
+
+    
+
+  </body>
+
+</html>

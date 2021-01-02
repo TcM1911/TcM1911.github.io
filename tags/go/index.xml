@@ -1,15 +1,20 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Go on Playhouse</title>
+    <title>go on Playhouse</title>
     <link>/tags/go/</link>
-    <description>Recent content in Go on Playhouse</description>
+    <description>Recent content in go on Playhouse</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 23 Mar 2020 18:00:00 +0000</lastBuildDate>
-    
-	<atom:link href="/tags/go/index.xml" rel="self" type="application/rss+xml" />
-    
+    <lastBuildDate>Sat, 02 Jan 2021 12:00:00 +0000</lastBuildDate><atom:link href="/tags/go/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Tackle Inline Go Functions</title>
+      <link>/posts/go-inline-code/</link>
+      <pubDate>Sat, 02 Jan 2021 12:00:00 +0000</pubDate>
+      
+      <guid>/posts/go-inline-code/</guid>
+      <description>The Problem Within the last few releases, the Go compiler has gotten better at inlining smaller functions. This can sometimes make it harder when analyzing an unknown Go binary with a disassembler. Instead of seeing a call to a documented library function, the library function&amp;rsquo;s code has been &amp;ldquo;merged&amp;rdquo; with the caller and it is easy to waste time trying to decipher the library code when just reading the documentation would have been faster.</description>
+    </item>
     
     <item>
       <title>Go Under the Hood: Orthrus</title>

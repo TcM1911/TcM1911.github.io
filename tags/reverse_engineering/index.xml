@@ -1,15 +1,20 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Reverse_engineering on Playhouse</title>
+    <title>reverse_engineering on Playhouse</title>
     <link>/tags/reverse_engineering/</link>
-    <description>Recent content in Reverse_engineering on Playhouse</description>
+    <description>Recent content in reverse_engineering on Playhouse</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 23 Jun 2019 00:00:00 +0100</lastBuildDate>
-    
-	<atom:link href="/tags/reverse_engineering/index.xml" rel="self" type="application/rss+xml" />
-    
+    <lastBuildDate>Sat, 02 Jan 2021 12:00:00 +0000</lastBuildDate><atom:link href="/tags/reverse_engineering/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Tackle Inline Go Functions</title>
+      <link>/posts/go-inline-code/</link>
+      <pubDate>Sat, 02 Jan 2021 12:00:00 +0000</pubDate>
+      
+      <guid>/posts/go-inline-code/</guid>
+      <description>The Problem Within the last few releases, the Go compiler has gotten better at inlining smaller functions. This can sometimes make it harder when analyzing an unknown Go binary with a disassembler. Instead of seeing a call to a documented library function, the library function&amp;rsquo;s code has been &amp;ldquo;merged&amp;rdquo; with the caller and it is easy to waste time trying to decipher the library code when just reading the documentation would have been faster.</description>
+    </item>
     
     <item>
       <title>Time For Some Function Recovery</title>
@@ -36,7 +41,7 @@
       
       <guid>/posts/malware-analysis-using-malboxes/</guid>
       <description>A while back I came across two projects that automate the creation of virtual machines for malware analysis. The original open source project what uses Packer and Vagrant to bootstrap a malware lab can be found here. As part of this blog post, I will instead use malboxes from GoSecure as it suits my need more.
-Malboxes creates a Windows VM template using packer. The template will have tools installed.</description>
+Malboxes creates a Windows VM template using packer. The template will have tools installed. Every time a new malware is analyzed, a new VM is created using vagrant.</description>
     </item>
     
   </channel>

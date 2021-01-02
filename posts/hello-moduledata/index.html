@@ -17,8 +17,8 @@
 <meta property="og:description" content="An introduction to the moduledate structure. An important data structure for Go binary analysis" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="/posts/hello-moduledata/" />
-<meta property="article:published_time" content="2019-06-16T00:00:00&#43;01:00"/>
-<meta property="article:modified_time" content="2019-06-16T00:00:00&#43;01:00"/>
+<meta property="article:published_time" content="2019-06-16T00:00:00+01:00" />
+<meta property="article:modified_time" content="2019-06-16T00:00:00+01:00" />
 
 
     
@@ -53,7 +53,7 @@
     <link rel="icon" type="image/png" href="../../images/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../../images/favicon-16x16.png" sizes="16x16">
 
-    <meta name="generator" content="Hugo 0.54.0" />
+    <meta name="generator" content="Hugo 0.80.0" />
   </head>
 
   <body class=" ">
@@ -115,10 +115,7 @@
       </header>
 
       <div>
-        
-
-<h1 id="say-hello-to-moduledata">Say Hello to Moduledata</h1>
-
+        <h1 id="say-hello-to-moduledata">Say Hello to Moduledata</h1>
 <p>The <em>moduledata</em> structure is a data table that was first introduced in version
 <em>1.5</em> of Go. It is a structure that holds important information that is needed
 when you statically analyzing Go binaries. It records information about the
@@ -128,39 +125,34 @@ located in the <code>.text</code> section and sometimes it is in the <code>.data
 the binary has been stripped there is no symbol pointing to the structure. In
 these scenarios, a brute-force search is needed. To know what we should search
 for, we need first know what the structure looks like.</p>
-
 <h2 id="the-structure">The structure</h2>
-
 <p>The structure that was added in version <em>1.5</em> is shown below. It is defined
 in the <em>symtab.go</em> file in the runtime package. It holds many good entries
 that can be used when analyzing Go binaries.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">moduledata</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">pclntable</span>    []<span style="color:#66d9ef">byte</span>
+	<span style="color:#a6e22e">ftab</span>         []<span style="color:#a6e22e">functab</span>
+	<span style="color:#a6e22e">filetab</span>      []<span style="color:#66d9ef">uint32</span>
+	<span style="color:#a6e22e">findfunctab</span>  <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">minpc</span>, <span style="color:#a6e22e">maxpc</span> <span style="color:#66d9ef">uintptr</span>
 
-<pre><code class="language-go">type moduledata struct {
-	pclntable    []byte
-	ftab         []functab
-	filetab      []uint32
-	findfunctab  uintptr
-	minpc, maxpc uintptr
+	<span style="color:#a6e22e">text</span>, <span style="color:#a6e22e">etext</span>           <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">noptrdata</span>, <span style="color:#a6e22e">enoptrdata</span> <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">data</span>, <span style="color:#a6e22e">edata</span>           <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">bss</span>, <span style="color:#a6e22e">ebss</span>             <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">noptrbss</span>, <span style="color:#a6e22e">enoptrbss</span>   <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">end</span>, <span style="color:#a6e22e">gcdata</span>, <span style="color:#a6e22e">gcbss</span>    <span style="color:#66d9ef">uintptr</span>
 
-	text, etext           uintptr
-	noptrdata, enoptrdata uintptr
-	data, edata           uintptr
-	bss, ebss             uintptr
-	noptrbss, enoptrbss   uintptr
-	end, gcdata, gcbss    uintptr
+	<span style="color:#a6e22e">typelinks</span> []<span style="color:#f92672">*</span><span style="color:#a6e22e">_type</span>
 
-	typelinks []*_type
+	<span style="color:#a6e22e">modulename</span>   <span style="color:#66d9ef">string</span>
+	<span style="color:#a6e22e">modulehashes</span> []<span style="color:#a6e22e">modulehash</span>
 
-	modulename   string
-	modulehashes []modulehash
+	<span style="color:#a6e22e">gcdatamask</span>, <span style="color:#a6e22e">gcbssmask</span> <span style="color:#a6e22e">bitvector</span>
 
-	gcdatamask, gcbssmask bitvector
-
-	next *moduledata
+	<span style="color:#a6e22e">next</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">moduledata</span>
 }
-</code></pre>
-
-<p>The first entry in the structure is the <code>pclntable</code>. This table holds mappings
+</code></pre></div><p>The first entry in the structure is the <code>pclntable</code>. This table holds mappings
 between source code line numbers and the program counter. The reason for this
 table is to be able to produce meaning full stack traces during a panic. The
 table is not removed if the binary is stripped and if debugging information is
@@ -171,7 +163,6 @@ function. Also using the program counter to source code line number mapping, it
 is possible to estimate the source code lines of the functions. Since this
 table holds a lot of information, it is one of the big contributors to the
 large file size of Go binaries, particularly in larger applications.</p>
-
 <p>The next entry in the structure is the <code>ftab</code>, short for function table. The
 <code>functab</code> structure is shown below. One of its usages is in the runtime
 package.  The table is used to determine which function is currently being
@@ -179,110 +170,96 @@ executed. This table is used if the runtime function <code>FuncForPC</code> is c
 function takes a value for the program counter and returns a function
 representation of that subroutine. Using that function representation, the
 filename and line number can be determined when given a program counter.</p>
-
-<pre><code class="language-go">type functab struct {
-	entry   uintptr
-	funcoff uintptr
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">functab</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">entry</span>   <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">funcoff</span> <span style="color:#66d9ef">uintptr</span>
 }
-</code></pre>
-
-<p>The <em>moduledata</em> structure also holds pointers to the beginning and the end of
+</code></pre></div><p>The <em>moduledata</em> structure also holds pointers to the beginning and the end of
 useful data areas. For example the beginning and end of the program counter and
 other sections. When analyzing ELF binaries, most of these values are easily
 found because they correspond to ELF sections. This data is more important when
 analyzing PE files because the areas are not marked as sections. Instead, they
 are located in either the <code>.text</code> section or the <code>.data</code> section.</p>
-
 <p>The last entry of interest is the <code>typelinks</code>. This slice holds pointers to the
 internal descriptions for types in the binary. These <em>types</em> structures hold
 information for all types, included user defined and internal primitives. By
 parsing this list it is possible to recover type information.</p>
-
-<h3 id="1-7-changes">1.7 changes</h3>
-
+<h3 id="17-changes">1.7 changes</h3>
 <p>With the release of <em>1.7</em>, the <em>moduledata</em> structure was changed. The
 structure is shown below. A new &ldquo;section&rdquo; was added called <em>types</em> and instead
 of the <code>typelinks</code> being a slice of pointers to <code>_type</code> structures, it is a
 slice of 32-bit integers that are offsets from the beginning of the <code>types</code>
 section where the structure is located. A table was also added for interfaces
 called <code>itablinks</code>.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">moduledata</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">pclntable</span>    []<span style="color:#66d9ef">byte</span>
+	<span style="color:#a6e22e">ftab</span>         []<span style="color:#a6e22e">functab</span>
+	<span style="color:#a6e22e">filetab</span>      []<span style="color:#66d9ef">uint32</span>
+	<span style="color:#a6e22e">findfunctab</span>  <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">minpc</span>, <span style="color:#a6e22e">maxpc</span> <span style="color:#66d9ef">uintptr</span>
 
-<pre><code class="language-go">type moduledata struct {
-	pclntable    []byte
-	ftab         []functab
-	filetab      []uint32
-	findfunctab  uintptr
-	minpc, maxpc uintptr
+	<span style="color:#a6e22e">text</span>, <span style="color:#a6e22e">etext</span>           <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">noptrdata</span>, <span style="color:#a6e22e">enoptrdata</span> <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">data</span>, <span style="color:#a6e22e">edata</span>           <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">bss</span>, <span style="color:#a6e22e">ebss</span>             <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">noptrbss</span>, <span style="color:#a6e22e">enoptrbss</span>   <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">end</span>, <span style="color:#a6e22e">gcdata</span>, <span style="color:#a6e22e">gcbss</span>    <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">types</span>, <span style="color:#a6e22e">etypes</span>         <span style="color:#66d9ef">uintptr</span>
 
-	text, etext           uintptr
-	noptrdata, enoptrdata uintptr
-	data, edata           uintptr
-	bss, ebss             uintptr
-	noptrbss, enoptrbss   uintptr
-	end, gcdata, gcbss    uintptr
-	types, etypes         uintptr
+	<span style="color:#a6e22e">typelinks</span> []<span style="color:#66d9ef">int32</span> <span style="color:#75715e">// offsets from types
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">itablinks</span> []<span style="color:#f92672">*</span><span style="color:#a6e22e">itab</span>
 
-	typelinks []int32 // offsets from types
-	itablinks []*itab
+	<span style="color:#a6e22e">modulename</span>   <span style="color:#66d9ef">string</span>
+	<span style="color:#a6e22e">modulehashes</span> []<span style="color:#a6e22e">modulehash</span>
 
-	modulename   string
-	modulehashes []modulehash
+	<span style="color:#a6e22e">gcdatamask</span>, <span style="color:#a6e22e">gcbssmask</span> <span style="color:#a6e22e">bitvector</span>
 
-	gcdatamask, gcbssmask bitvector
-
-	typemap map[typeOff]*_type // offset to *_rtype in previous module
-
-	next *moduledata
+	<span style="color:#a6e22e">typemap</span> <span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">typeOff</span>]<span style="color:#f92672">*</span><span style="color:#a6e22e">_type</span> <span style="color:#75715e">// offset to *_rtype in previous module
+</span><span style="color:#75715e"></span>
+	<span style="color:#a6e22e">next</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">moduledata</span>
 }
-</code></pre>
-
-<h3 id="current-format">Current format</h3>
-
+</code></pre></div><h3 id="current-format">Current format</h3>
 <p>The current format of the <em>moduledata</em> was introduced in version <em>1.8</em>. The
 main changes to the structure that was added were to support the plugin
 functionality. The structure is shown below.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">moduledata</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">pclntable</span>    []<span style="color:#66d9ef">byte</span>
+	<span style="color:#a6e22e">ftab</span>         []<span style="color:#a6e22e">functab</span>
+	<span style="color:#a6e22e">filetab</span>      []<span style="color:#66d9ef">uint32</span>
+	<span style="color:#a6e22e">findfunctab</span>  <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">minpc</span>, <span style="color:#a6e22e">maxpc</span> <span style="color:#66d9ef">uintptr</span>
 
-<pre><code class="language-go">type moduledata struct {
-	pclntable    []byte
-	ftab         []functab
-	filetab      []uint32
-	findfunctab  uintptr
-	minpc, maxpc uintptr
+	<span style="color:#a6e22e">text</span>, <span style="color:#a6e22e">etext</span>           <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">noptrdata</span>, <span style="color:#a6e22e">enoptrdata</span> <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">data</span>, <span style="color:#a6e22e">edata</span>           <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">bss</span>, <span style="color:#a6e22e">ebss</span>             <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">noptrbss</span>, <span style="color:#a6e22e">enoptrbss</span>   <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">end</span>, <span style="color:#a6e22e">gcdata</span>, <span style="color:#a6e22e">gcbss</span>    <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">types</span>, <span style="color:#a6e22e">etypes</span>         <span style="color:#66d9ef">uintptr</span>
 
-	text, etext           uintptr
-	noptrdata, enoptrdata uintptr
-	data, edata           uintptr
-	bss, ebss             uintptr
-	noptrbss, enoptrbss   uintptr
-	end, gcdata, gcbss    uintptr
-	types, etypes         uintptr
+	<span style="color:#a6e22e">textsectmap</span> []<span style="color:#a6e22e">textsect</span>
+	<span style="color:#a6e22e">typelinks</span>   []<span style="color:#66d9ef">int32</span> <span style="color:#75715e">// offsets from types
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">itablinks</span>   []<span style="color:#f92672">*</span><span style="color:#a6e22e">itab</span>
 
-	textsectmap []textsect
-	typelinks   []int32 // offsets from types
-	itablinks   []*itab
+	<span style="color:#a6e22e">ptab</span> []<span style="color:#a6e22e">ptabEntry</span>
 
-	ptab []ptabEntry
+	<span style="color:#a6e22e">pluginpath</span> <span style="color:#66d9ef">string</span>
+	<span style="color:#a6e22e">pkghashes</span>  []<span style="color:#a6e22e">modulehash</span>
 
-	pluginpath string
-	pkghashes  []modulehash
+	<span style="color:#a6e22e">modulename</span>   <span style="color:#66d9ef">string</span>
+	<span style="color:#a6e22e">modulehashes</span> []<span style="color:#a6e22e">modulehash</span>
 
-	modulename   string
-	modulehashes []modulehash
+	<span style="color:#a6e22e">hasmain</span> <span style="color:#66d9ef">uint8</span> <span style="color:#75715e">// 1 if module contains the main function, 0 otherwise
+</span><span style="color:#75715e"></span>
+	<span style="color:#a6e22e">gcdatamask</span>, <span style="color:#a6e22e">gcbssmask</span> <span style="color:#a6e22e">bitvector</span>
 
-	hasmain uint8 // 1 if module contains the main function, 0 otherwise
-
-	gcdatamask, gcbssmask bitvector
-
-	typemap map[typeOff]*_type // offset to *_rtype in previous module
-
-	bad bool // module failed to load and should be ignored
-
-	next *moduledata
+	<span style="color:#a6e22e">typemap</span> <span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">typeOff</span>]<span style="color:#f92672">*</span><span style="color:#a6e22e">_type</span> <span style="color:#75715e">// offset to *_rtype in previous module
+</span><span style="color:#75715e"></span>
+	<span style="color:#a6e22e">bad</span> <span style="color:#66d9ef">bool</span> <span style="color:#75715e">// module failed to load and should be ignored
+</span><span style="color:#75715e"></span>
+	<span style="color:#a6e22e">next</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">moduledata</span>
 }
-</code></pre>
-
-<h2 id="how-to-find-the-moduledata">How to find the moduledata</h2>
-
+</code></pre></div><h2 id="how-to-find-the-moduledata">How to find the moduledata</h2>
 <p>It is easiest to find the <em>moduledata</em> structure in ELF binaries. Because it is
 not found at a predetermined offset, has its own section, or a symbol it needs
 to to be searched for. It is located in the <code>.noptrdata</code> section and since this
@@ -295,7 +272,6 @@ of the structure since the address to the <code>pclntable</code> is the first en
 the address of it is easy to extract. The match can be verified by checking for
 other known address in the candidate. For example, the addresses for the <code>.text</code>
 and <code>.data</code> sections can be used.</p>
-
 <p>The process for PE files is slightly harder. For starters, the <code>.noptrdata</code>
 area is not located in its own section. Secondly, neither is the <code>pclntable</code>.
 Consequently, are rather brute-force method is required. Luckily, the
@@ -303,9 +279,7 @@ Consequently, are rather brute-force method is required. Luckily, the
 to search for the table. Once it has been found, the address of this header can
 be used to find the <em>moduledata</em> structure in either the <code>.text</code> or <code>.data</code>
 section using the same process as in ELF binaries.</p>
-
 <h2 id="conclusion">Conclusion</h2>
-
 <p>The <em>moduledata</em> structure holds information about the layout of the
 executable.  It can be somewhat hard to find this data structure. Once it has
 been found, it can be used to analyze the Go binary file better. This also
@@ -331,7 +305,7 @@ includes recovering type information.</p>
     
       <p>All rights reserved</p>
     
-     © 2020
+     © 2021
     
     
   </section>

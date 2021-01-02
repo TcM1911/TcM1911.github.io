@@ -17,8 +17,8 @@
 <meta property="og:description" content="Binaries compiled with the Go compiler includes a large set of metadata. This metadata can be used to assist static analysis of stripped binaries. Stripped binaries, especially statically compiled, are hard to analyze. Since the symbols have been removed and the huge number of subroutines, hello world binary in Go have thousands of subroutines, it can be very time-consuming. Fortunately, the metadata in the binary can be used to reconstruct symbols and also recover information about the source code layout. One of the things that can be recovered is function information." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="/posts/pclntab-function-recovery/" />
-<meta property="article:published_time" content="2019-06-23T00:00:00&#43;01:00"/>
-<meta property="article:modified_time" content="2019-06-23T00:00:00&#43;01:00"/>
+<meta property="article:published_time" content="2019-06-23T00:00:00+01:00" />
+<meta property="article:modified_time" content="2019-06-23T00:00:00+01:00" />
 
 
     
@@ -53,7 +53,7 @@
     <link rel="icon" type="image/png" href="../../images/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../../images/favicon-16x16.png" sizes="16x16">
 
-    <meta name="generator" content="Hugo 0.54.0" />
+    <meta name="generator" content="Hugo 0.80.0" />
   </head>
 
   <body class=" ">
@@ -115,10 +115,7 @@
       </header>
 
       <div>
-        
-
-<h1 id="time-for-some-function-recovery">Time For Some Function Recovery</h1>
-
+        <h1 id="time-for-some-function-recovery">Time For Some Function Recovery</h1>
 <p>Binaries compiled with the Go compiler includes a large set of metadata. This
 metadata can be used to assist static analysis of stripped binaries. Stripped
 binaries, especially statically compiled, are hard to analyze. Since the
@@ -127,23 +124,18 @@ binary in Go have thousands of subroutines, it can be very time-consuming.
 Fortunately, the metadata in the binary can be used to reconstruct symbols and
 also recover information about the source code layout. One of the things that
 can be recovered is function information.</p>
-
 <h2 id="demo-time">Demo time!</h2>
-
 <p>To see how it is possible to recover function information from stripped
 binaries compiled by the Go compiler, let&rsquo;s look at a demo. The demo code below
 is very straight forward. The main function will call the builtin <code>panic</code> to
 essentially through an exception with the string &ldquo;Hello World&rdquo;. Line numbers in
 the source file have also been included and it will obvious next.</p>
-
-<pre><code class="language-go">1 package main
-2
-3 func main() {
-4    panic(&quot;Hello World&quot;)
-5 }
-</code></pre>
-
-<p>The code can be compiled with the linker flags to also strip it and remove
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ae81ff">1</span> <span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+<span style="color:#ae81ff">2</span>
+<span style="color:#ae81ff">3</span> <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+<span style="color:#ae81ff">4</span>    panic(<span style="color:#e6db74">&#34;Hello World&#34;</span>)
+<span style="color:#ae81ff">5</span> }
+</code></pre></div><p>The code can be compiled with the linker flags to also strip it and remove
 debug information by executing the first command shown below. The <code>file</code>
 command also confirms that it has been stripped. If the binary is executed, a
 stack trace is printed as expected. In addition to the panic message, the
@@ -153,7 +145,6 @@ panicked. Below that we have <code>/tmp/panic-demo/panic.go:4</code>, which is t
 that the panic occurred on source code line <em>4</em> in the file
 <code>/tmp/panic-demo/panic.go</code>.  All this information, even though the binary has
 been stripped!</p>
-
 <pre><code>$ go build -o demo -ldflags='-s -w' panic.go
 $ file demo
 demo: ELF 64-bit LSB executable, x86-64, version 1 (SYSV),
@@ -164,13 +155,10 @@ panic: Hello World
 goroutine 1 [running]:
 main.main()
 /tmp/panic-demo/panic.go:4 +0x39
-</code></pre>
-
-<p>Where is this data located? Below is a printout of the sections in the produced
+</code></pre><p>Where is this data located? Below is a printout of the sections in the produced
 ELF binary. It turns out, all this data is located in the <code>.gopclntab</code> section.
 So what is this section? To answer this question, we have to take a visit to
 Plan 9.</p>
-
 <pre><code>There are 13 section headers, starting at offset 0x1c8:
 
 Section Headers:
@@ -188,10 +176,7 @@ Section Headers:
 [10] .bss             NOBITS    000b9960 0001c310  0 WA
 [11] .noptrbss        NOBITS    000d5c80 000026f8  0 WA
 [12] .note.go.buildid NOTE      00000f9c 00000064  0 A
-</code></pre>
-
-<h2 id="plan-9-s-heritage-in-go">Plan 9&rsquo;s heritage in Go</h2>
-
+</code></pre><h2 id="plan-9s-heritage-in-go">Plan 9&rsquo;s heritage in Go</h2>
 <p>Plan 9 was a project that started within Bell Labs. It was what can be seen as
 the next evolution of <em>UNIX</em>. Some of Go&rsquo;s initial core contributors have also
 worked on or related projects to Plan 9. That some Plan 9 features can also be
@@ -203,9 +188,7 @@ that can be used to recover the absolute line number from a given program
 location. It continues on that it is generated from the source seen by the
 compiler. The description appears to match well with what is seen in Go
 binaries too.</p>
-
-<h3 id="plan-9-man-a-out">Plan 9 man a.out</h3>
-
+<h3 id="plan-9-man-aout">Plan 9 man a.out</h3>
 <pre><code>NAME
     a.out - object file format
 
@@ -230,15 +213,11 @@ DESCRIPTION
    Three symbol types in the main symbol table facilitate con-
    version of the absolute number to source file and line num-
    ber:
-</code></pre>
-
-<h2 id="go-s-pc-ln-table">Go&rsquo;s PC/LN Table</h2>
-
+</code></pre><h2 id="gos-pcln-table">Go&rsquo;s PC/LN Table</h2>
 <p>The current implementation version in Go was released with version <em>1.2</em>.  The
 <a href="https://docs.google.com/document/d/1lyPIbmsYbXnpNj57a261hgOYVpNRcgydurVQIyZOz_o/pub">proposal</a>
 both outline the original reason for the table and some of the possible uses.
 The quote below states that it was added to enhance the stack traces.</p>
-
 <blockquote>
 <p>To get accurate crash-time stack traces years ago, I moved the Plan 9 symbol
 and pc-&gt;line number (pcln) tables into memory that would be mapped at run
@@ -246,192 +225,159 @@ time, and then I put code to parse them in the runtime package. In addition
 to stack traces, the stack walking ability is now used for profiling and
 garbage collection.</p>
 </blockquote>
-
 <p>It also states that it can be used for mapping the program counter to source
 code line number:</p>
-
 <blockquote>
 <p>There are many interesting uses of pc-value tables. The most obvious is
 mapping program counter to line number</p>
 </blockquote>
-
 <p>This mean, by parsing the table it should be possible to recover function
 information.</p>
-
 <p>The proposal suggests that the standard library has code that can parse this
 table. Instead of implementing a parser from scratch, it is much easier to use
 something that is already written. Searching the standard library source code
 for references to the <em>PCLNTAB</em>, results in some matches found in the debug
 package. The debug package appears to be a good starting point.</p>
-
 <h2 id="into-the-debug-package">Into the debug package</h2>
-
 <p>One of the matches is found in the <code>pclntab_test.go</code> file. The function is
 shown below. It can be seen that it gets the <code>.gopclntab</code> section, passes it to
 the <code>NewLineTable</code> function and passes the output to <code>NewTable</code> function.  The
 only problem is, it also uses the symbol section. For stripped binaries, this
 section does not contain any symbols.</p>
-
-<pre><code class="language-go">func parse(file string, f *elf.File, t *testing.T) (*elf.File, *Table) {
-	s := f.Section(&quot;.gosymtab&quot;)
-	if s == nil {
-		t.Skip(&quot;no .gosymtab section&quot;)
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">file</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">f</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">elf</span>.<span style="color:#a6e22e">File</span>, <span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">T</span>) (<span style="color:#f92672">*</span><span style="color:#a6e22e">elf</span>.<span style="color:#a6e22e">File</span>, <span style="color:#f92672">*</span><span style="color:#a6e22e">Table</span>) {
+	<span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">Section</span>(<span style="color:#e6db74">&#34;.gosymtab&#34;</span>)
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">s</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Skip</span>(<span style="color:#e6db74">&#34;no .gosymtab section&#34;</span>)
 	}
-	symdat, err := s.Data()
-	if err != nil {
-		f.Close()
-		t.Fatalf(&quot;reading %s gosymtab: %v&quot;, file, err)
+	<span style="color:#a6e22e">symdat</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">Data</span>()
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">Close</span>()
+		<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;reading %s gosymtab: %v&#34;</span>, <span style="color:#a6e22e">file</span>, <span style="color:#a6e22e">err</span>)
 	}
-	pclndat, err := f.Section(&quot;.gopclntab&quot;).Data()
-	if err != nil {
-		f.Close()
-		t.Fatalf(&quot;reading %s gopclntab: %v&quot;, file, err)
-	}
-
-	pcln := NewLineTable(pclndat, f.Section(&quot;.text&quot;).Addr)
-	tab, err := NewTable(symdat, pcln)
-	if err != nil {
-		f.Close()
-		t.Fatalf(&quot;parsing %s gosymtab: %v&quot;, file, err)
+	<span style="color:#a6e22e">pclndat</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">Section</span>(<span style="color:#e6db74">&#34;.gopclntab&#34;</span>).<span style="color:#a6e22e">Data</span>()
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">Close</span>()
+		<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;reading %s gopclntab: %v&#34;</span>, <span style="color:#a6e22e">file</span>, <span style="color:#a6e22e">err</span>)
 	}
 
-	return f, tab
+	<span style="color:#a6e22e">pcln</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">NewLineTable</span>(<span style="color:#a6e22e">pclndat</span>, <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">Section</span>(<span style="color:#e6db74">&#34;.text&#34;</span>).<span style="color:#a6e22e">Addr</span>)
+	<span style="color:#a6e22e">tab</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">NewTable</span>(<span style="color:#a6e22e">symdat</span>, <span style="color:#a6e22e">pcln</span>)
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">Close</span>()
+		<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;parsing %s gosymtab: %v&#34;</span>, <span style="color:#a6e22e">file</span>, <span style="color:#a6e22e">err</span>)
+	}
+
+	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">f</span>, <span style="color:#a6e22e">tab</span>
 }
-</code></pre>
-
-<p>After looking into the <code>NewTable</code> function, it is clear that it passes
+</code></pre></div><p>After looking into the <code>NewTable</code> function, it is clear that it passes
 the symbol table to the <code>walksymtab</code> function.</p>
-
-<pre><code class="language-go">func NewTable(symtab []byte, pcln *LineTable) (*Table, error) {
-	var n int
-	err := walksymtab(symtab, func(s sym) error {
-		n++
-		return nil
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">NewTable</span>(<span style="color:#a6e22e">symtab</span> []<span style="color:#66d9ef">byte</span>, <span style="color:#a6e22e">pcln</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">LineTable</span>) (<span style="color:#f92672">*</span><span style="color:#a6e22e">Table</span>, <span style="color:#66d9ef">error</span>) {
+	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int</span>
+	<span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">walksymtab</span>(<span style="color:#a6e22e">symtab</span>, <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">s</span> <span style="color:#a6e22e">sym</span>) <span style="color:#66d9ef">error</span> {
+		<span style="color:#a6e22e">n</span><span style="color:#f92672">++</span>
+		<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
 	})
-        ...
-</code></pre>
-
-<p>Luckily the <code>walksymtab</code> does not need any symbols, as can be seen
+        <span style="color:#f92672">...</span>
+</code></pre></div><p>Luckily the <code>walksymtab</code> does not need any symbols, as can be seen
 below. Consequently, an empty byte array can be passed in instead.</p>
-
-<pre><code class="language-go">func walksymtab(data []byte, fn func(sym) error) error {
-	if len(data) == 0 { // missing symtab is okay
-		return nil
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">walksymtab</span>(<span style="color:#a6e22e">data</span> []<span style="color:#66d9ef">byte</span>, <span style="color:#a6e22e">fn</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">sym</span>) <span style="color:#66d9ef">error</span>) <span style="color:#66d9ef">error</span> {
+	<span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">data</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> { <span style="color:#75715e">// missing symtab is okay
+</span><span style="color:#75715e"></span>		<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
 	}
-        ...
-</code></pre>
-
-<p>The structure of the table returned by the <code>NewTable</code> function is
+        <span style="color:#f92672">...</span>
+</code></pre></div><p>The structure of the table returned by the <code>NewTable</code> function is
 shown below. Excluding the private field, the only entry available
 in newer Go versions is the array of <code>Func</code>.</p>
-
-<pre><code class="language-go">// Table represents a Go symbol table. It stores all of the
-// symbols decoded from the program and provides methods to translate
-// between symbols, names, and addresses.
-type Table struct {
-	Syms  []Sym // nil for Go 1.3 and later binaries
-	Funcs []Func
-	Files map[string]*Obj // nil for Go 1.2 and later binaries
-	Objs  []Obj           // nil for Go 1.2 and later binaries
-
-	go12line *LineTable // Go 1.2 line number table
-}
-</code></pre>
-
-<p>The <code>Func</code> structure is listed below. This structure has two important
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// Table represents a Go symbol table. It stores all of the
+</span><span style="color:#75715e">// symbols decoded from the program and provides methods to translate
+</span><span style="color:#75715e">// between symbols, names, and addresses.
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Table</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">Syms</span>  []<span style="color:#a6e22e">Sym</span> <span style="color:#75715e">// nil for Go 1.3 and later binaries
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Funcs</span> []<span style="color:#a6e22e">Func</span>
+	<span style="color:#a6e22e">Files</span> <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#f92672">*</span><span style="color:#a6e22e">Obj</span> <span style="color:#75715e">// nil for Go 1.2 and later binaries
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Objs</span>  []<span style="color:#a6e22e">Obj</span>           <span style="color:#75715e">// nil for Go 1.2 and later binaries
+</span><span style="color:#75715e"></span>
+	<span style="color:#a6e22e">go12line</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">LineTable</span> <span style="color:#75715e">// Go 1.2 line number table
+</span><span style="color:#75715e"></span>}
+</code></pre></div><p>The <code>Func</code> structure is listed below. This structure has two important
 fields, <em>Entry</em> and <em>End</em>. They are the starting and ending program
 counters for the function.</p>
-
-<pre><code class="language-go">// A Func collects information about a single function.
-type Func struct {
-	Entry uint64
-	*Sym
-	End       uint64
-	Params    []*Sym // nil for Go 1.3 and later binaries
-	Locals    []*Sym // nil for Go 1.3 and later binaries
-	FrameSize int
-	LineTable *LineTable
-	Obj       *Obj
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// A Func collects information about a single function.
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Func</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">Entry</span> <span style="color:#66d9ef">uint64</span>
+	<span style="color:#f92672">*</span><span style="color:#a6e22e">Sym</span>
+	<span style="color:#a6e22e">End</span>       <span style="color:#66d9ef">uint64</span>
+	<span style="color:#a6e22e">Params</span>    []<span style="color:#f92672">*</span><span style="color:#a6e22e">Sym</span> <span style="color:#75715e">// nil for Go 1.3 and later binaries
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Locals</span>    []<span style="color:#f92672">*</span><span style="color:#a6e22e">Sym</span> <span style="color:#75715e">// nil for Go 1.3 and later binaries
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">FrameSize</span> <span style="color:#66d9ef">int</span>
+	<span style="color:#a6e22e">LineTable</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">LineTable</span>
+	<span style="color:#a6e22e">Obj</span>       <span style="color:#f92672">*</span><span style="color:#a6e22e">Obj</span>
 }
-</code></pre>
-
-<p>The structure has methods that can be used to get the package name, the base
+</code></pre></div><p>The structure has methods that can be used to get the package name, the base
 name, and its receiver name. If the receiver name is a none empty string, it is
 actually a method. The base name is just the function or method name, without
 the package name or the receiver name.</p>
-
 <p>To get information about the source code file, the <code>PCToLine</code> method on the
 <code>Table</code> structure can be used. The function signature of this method is shown
 below. As can be seen, if a program counter is passed in the method returns the
 file name and line number.</p>
-
-<pre><code class="language-go">// PCToLine looks up line number information for a program counter.
-// If there is no information, it returns fn == nil.
-func (t *Table) PCToLine(pc uint64) (file string, line int, fn *Func)
-</code></pre>
-
-<p>Using these methods, the data found in the panic stack trace can be extracted.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// PCToLine looks up line number information for a program counter.
+</span><span style="color:#75715e">// If there is no information, it returns fn == nil.
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Table</span>) <span style="color:#a6e22e">PCToLine</span>(<span style="color:#a6e22e">pc</span> <span style="color:#66d9ef">uint64</span>) (<span style="color:#a6e22e">file</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">line</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">fn</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Func</span>)
+</code></pre></div><p>Using these methods, the data found in the panic stack trace can be extracted.
 Since the beginning and the end program counters are known, this can be used
 to estimate how many lines the function occupy in the source code file.</p>
-
 <h2 id="working-with-pe-files">Working with PE files</h2>
-
 <p>When it comes down to analyzing ELF files the process is more straight forward.
 The <code>pclntab</code> is located in its own section which means it is easy to extract
 and analyze. When it comes to PE file, it becomes harder. As mentioned in the
 <a href="../../posts/hello-moduledata">moduledata</a> post, most data structures are not
 located in their own sections in PE files. This means the <code>pclntab</code> needs to be
 searched for in the PE file.</p>
-
 <p>The <code>debug</code> package has one interesting function and a constant defined, both
 shown below. The <code>go12init</code> function is called when it parses the <code>pclntab</code>. In
 the snippet below it can be seen that the function checks some offsets in the
 table for specific values. It also checks that the table starts with the magic
 bytes <code>0xfffffffb</code>. This information can be used to find and validate that we
 have found a good candidate for the <code>pclntab</code> in the file. Essentially:</p>
-
 <ol>
 <li>Search the binary for the magic bytes.</li>
 <li>Check the match by performing similar checks as the <code>go12init</code> function.</li>
 <li>If the checks pass it is probably the <code>pclntab</code>. If not, back to <em>1</em>.</li>
 </ol>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">go12magic</span> = <span style="color:#ae81ff">0xfffffffb</span>
 
-<pre><code class="language-go">const go12magic = 0xfffffffb
 
-
-// go12init initializes the Go 1.2 metadata if t is a Go 1.2 symbol table.
-func (t *LineTable) go12Init() {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	if t.go12 != 0 {
-		return
+<span style="color:#75715e">// go12init initializes the Go 1.2 metadata if t is a Go 1.2 symbol table.
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">LineTable</span>) <span style="color:#a6e22e">go12Init</span>() {
+	<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">go12</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span> {
+		<span style="color:#66d9ef">return</span>
 	}
 
-	defer func() {
-		// If we panic parsing, assume it's not a Go 1.2 symbol table.
-		recover()
+	<span style="color:#66d9ef">defer</span> <span style="color:#66d9ef">func</span>() {
+		<span style="color:#75715e">// If we panic parsing, assume it&#39;s not a Go 1.2 symbol table.
+</span><span style="color:#75715e"></span>		recover()
 	}()
 
-	// Check header: 4-byte magic, two zeros, pc quantum, pointer size.
-	t.go12 = -1 // not Go 1.2 until proven otherwise
-	if len(t.Data) &lt; 16 || t.Data[4] != 0 || t.Data[5] != 0 ||
-		(t.Data[6] != 1 &amp;&amp; t.Data[6] != 2 &amp;&amp; t.Data[6] != 4) || // pc quantum
-		(t.Data[7] != 4 &amp;&amp; t.Data[7] != 8) { // pointer size
-		return
+	<span style="color:#75715e">// Check header: 4-byte magic, two zeros, pc quantum, pointer size.
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">go12</span> = <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span> <span style="color:#75715e">// not Go 1.2 until proven otherwise
+</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Data</span>) &lt; <span style="color:#ae81ff">16</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Data</span>[<span style="color:#ae81ff">4</span>] <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Data</span>[<span style="color:#ae81ff">5</span>] <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span>
+		(<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Data</span>[<span style="color:#ae81ff">6</span>] <span style="color:#f92672">!=</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Data</span>[<span style="color:#ae81ff">6</span>] <span style="color:#f92672">!=</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Data</span>[<span style="color:#ae81ff">6</span>] <span style="color:#f92672">!=</span> <span style="color:#ae81ff">4</span>) <span style="color:#f92672">||</span> <span style="color:#75715e">// pc quantum
+</span><span style="color:#75715e"></span>		(<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Data</span>[<span style="color:#ae81ff">7</span>] <span style="color:#f92672">!=</span> <span style="color:#ae81ff">4</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Data</span>[<span style="color:#ae81ff">7</span>] <span style="color:#f92672">!=</span> <span style="color:#ae81ff">8</span>) { <span style="color:#75715e">// pointer size
+</span><span style="color:#75715e"></span>		<span style="color:#66d9ef">return</span>
 	}
 
-	switch uint32(go12magic) {
-	case binary.LittleEndian.Uint32(t.Data):
-		t.binary = binary.LittleEndian
-	case binary.BigEndian.Uint32(t.Data):
-		t.binary = binary.BigEndian
-	default:
-		return
+	<span style="color:#66d9ef">switch</span> uint32(<span style="color:#a6e22e">go12magic</span>) {
+	<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">binary</span>.<span style="color:#a6e22e">LittleEndian</span>.<span style="color:#a6e22e">Uint32</span>(<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Data</span>):
+		<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">binary</span> = <span style="color:#a6e22e">binary</span>.<span style="color:#a6e22e">LittleEndian</span>
+	<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">binary</span>.<span style="color:#a6e22e">BigEndian</span>.<span style="color:#a6e22e">Uint32</span>(<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Data</span>):
+		<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">binary</span> = <span style="color:#a6e22e">binary</span>.<span style="color:#a6e22e">BigEndian</span>
+	<span style="color:#66d9ef">default</span>:
+		<span style="color:#66d9ef">return</span>
 	}
-</code></pre>
-
-<h2 id="construct-a-hypothetical-source-tree-summary">Construct a hypothetical source tree summary</h2>
-
+</code></pre></div><h2 id="construct-a-hypothetical-source-tree-summary">Construct a hypothetical source tree summary</h2>
 <p>With these tools, it is possible to reconstruct a theoretical source code
 layout.  By using the <code>PCToLine</code> function, it is possible to get the source
 code line numbers the function was located between. Sorting this by file and
@@ -442,7 +388,6 @@ the <code>main.go</code> file. This file was located in the folder
 file called <code>&lt;autogenerated&gt;</code>. This is for functions generated by the compiler.
 In this case, the coder did not use and implement the <code>init</code> function so a dummy
 version was added by the compiler.</p>
-
 <pre><code>$ shasum zebrocy &amp;&amp; file zebrocy &amp;&amp; redress -src zebrocy
 2114fb25d5243f76c85c0df68fc4bf8e93cfb19d  zebrocy
 zebrocy: PE32 executable (GUI) Intel 80386 (stripped to external PDB), for MS Windows
@@ -465,11 +410,8 @@ File: main.go
 	GetSND Lines: 192 to 215 (23)
 	PrcName Lines: 215 to 222 (7)
 	main Lines: 222 to 229 (7)
-</code></pre>
-
-<p>The other example shown below is of a botnet targeting Linux machines. This is
+</code></pre><p>The other example shown below is of a botnet targeting Linux machines. This is
 a large malware with its functionality broken up into multiple packages.</p>
-
 <pre><code>$ shasum ddgs &amp;&amp; file ddgs &amp;&amp; redress -src ddgs
 d60014779308bbfc4d18dfd4c92dbfaf24431bef  ddgs
 ddgs: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), statically linked, Go BuildID=KSx-IUthLVOHq0UzEZyM/mjB8HOw24vd_xZCdEqVN/dNDZfk8_Npo5ipOkpocJ/E3b5qlPRyk4d0WtEMJ8b, stripped
@@ -770,10 +712,7 @@ File: result.go
 File: table.go
 	(*Table)Do Lines: 19 to 26 (7)
 	(Cmd)Handler-fm Lines: 27 to 27 (0)
-</code></pre>
-
-<h2 id="conclusion">Conclusion</h2>
-
+</code></pre><h2 id="conclusion">Conclusion</h2>
 <p>The <code>pclntab</code> has many uses in a Go binary. One of its uses is for the runtime
 to produce meaning full stack traces in the case of a <code>panic</code>. The table holds
 valuable information about functions that can be used to analyze unknown
@@ -806,7 +745,7 @@ identical.</p>
     
       <p>All rights reserved</p>
     
-     © 2020
+     © 2021
     
     
   </section>

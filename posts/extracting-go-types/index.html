@@ -17,8 +17,8 @@
 <meta property="og:description" content="All the types used by a Go application are stored within a *types* section inside the binary. By parsing this data structure, it is possible to fully recover all the function definitions. This includes private types and fields. This post walks through how to extract and parse this type data so the type definitions can be reconstructed for all types in the binary." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="/posts/extracting-go-types/" />
-<meta property="article:published_time" content="2019-09-15T00:00:00&#43;01:00"/>
-<meta property="article:modified_time" content="2019-09-15T00:00:00&#43;01:00"/>
+<meta property="article:published_time" content="2019-09-15T00:00:00+01:00" />
+<meta property="article:modified_time" content="2019-09-15T00:00:00+01:00" />
 
 
     
@@ -53,7 +53,7 @@
     <link rel="icon" type="image/png" href="../../images/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../../images/favicon-16x16.png" sizes="16x16">
 
-    <meta name="generator" content="Hugo 0.54.0" />
+    <meta name="generator" content="Hugo 0.80.0" />
   </head>
 
   <body class=" ">
@@ -110,10 +110,7 @@
       </header>
 
       <div>
-        
-
-<h1 id="introduction">Introduction</h1>
-
+        <h1 id="introduction">Introduction</h1>
 <p>Go is a strongly typed language. This means that you can&rsquo;t concatenate for
 example a string with an integer without first converting the integer to a
 string. For this to be enforced, there needs to be a way for the runtime to
@@ -123,217 +120,190 @@ is possible to reconstruct all the types inside the binary which can aid the
 analysis of a suspicious application/malware. This post will walk through where
 this data is located, how to extract and parse it so the type definitions can
 be reconstructed for all the types in the binary.</p>
-
 <h1 id="it-all-starts-with-moduledata">It all starts with moduledata</h1>
-
 <p>As described in a <a href="../../posts/hello-moduledata/">previous blog post</a>, the
 moduledata structure holds a pointer to some very important data structures in
 the Go binary. For recovering type-information, we are mainly interested in
 two data structures: <code>types</code> and <code>typelinks</code>. Below is the current moduledata
 structure as of this writing.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">moduledata</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">pclntable</span>    []<span style="color:#66d9ef">byte</span>
+	<span style="color:#a6e22e">ftab</span>         []<span style="color:#a6e22e">functab</span>
+	<span style="color:#a6e22e">filetab</span>      []<span style="color:#66d9ef">uint32</span>
+	<span style="color:#a6e22e">findfunctab</span>  <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">minpc</span>, <span style="color:#a6e22e">maxpc</span> <span style="color:#66d9ef">uintptr</span>
 
-<pre><code class="language-go">type moduledata struct {
-	pclntable    []byte
-	ftab         []functab
-	filetab      []uint32
-	findfunctab  uintptr
-	minpc, maxpc uintptr
+	<span style="color:#a6e22e">text</span>, <span style="color:#a6e22e">etext</span>           <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">noptrdata</span>, <span style="color:#a6e22e">enoptrdata</span> <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">data</span>, <span style="color:#a6e22e">edata</span>           <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">bss</span>, <span style="color:#a6e22e">ebss</span>             <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">noptrbss</span>, <span style="color:#a6e22e">enoptrbss</span>   <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">end</span>, <span style="color:#a6e22e">gcdata</span>, <span style="color:#a6e22e">gcbss</span>    <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">types</span>, <span style="color:#a6e22e">etypes</span>         <span style="color:#66d9ef">uintptr</span>
 
-	text, etext           uintptr
-	noptrdata, enoptrdata uintptr
-	data, edata           uintptr
-	bss, ebss             uintptr
-	noptrbss, enoptrbss   uintptr
-	end, gcdata, gcbss    uintptr
-	types, etypes         uintptr
+	<span style="color:#a6e22e">textsectmap</span> []<span style="color:#a6e22e">textsect</span>
+	<span style="color:#a6e22e">typelinks</span>   []<span style="color:#66d9ef">int32</span> <span style="color:#75715e">// offsets from types
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">itablinks</span>   []<span style="color:#f92672">*</span><span style="color:#a6e22e">itab</span>
 
-	textsectmap []textsect
-	typelinks   []int32 // offsets from types
-	itablinks   []*itab
+	<span style="color:#a6e22e">ptab</span> []<span style="color:#a6e22e">ptabEntry</span>
 
-	ptab []ptabEntry
+	<span style="color:#a6e22e">pluginpath</span> <span style="color:#66d9ef">string</span>
+	<span style="color:#a6e22e">pkghashes</span>  []<span style="color:#a6e22e">modulehash</span>
 
-	pluginpath string
-	pkghashes  []modulehash
+	<span style="color:#a6e22e">modulename</span>   <span style="color:#66d9ef">string</span>
+	<span style="color:#a6e22e">modulehashes</span> []<span style="color:#a6e22e">modulehash</span>
 
-	modulename   string
-	modulehashes []modulehash
+	<span style="color:#a6e22e">hasmain</span> <span style="color:#66d9ef">uint8</span> <span style="color:#75715e">// 1 if module contains the main function, 0 otherwise
+</span><span style="color:#75715e"></span>
+	<span style="color:#a6e22e">gcdatamask</span>, <span style="color:#a6e22e">gcbssmask</span> <span style="color:#a6e22e">bitvector</span>
 
-	hasmain uint8 // 1 if module contains the main function, 0 otherwise
-
-	gcdatamask, gcbssmask bitvector
-
-	typemap map[typeOff]*_type // offset to *_rtype in previous module
-
-	bad bool // module failed to load and should be ignored
-
-	next *moduledata
+	<span style="color:#a6e22e">typemap</span> <span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">typeOff</span>]<span style="color:#f92672">*</span><span style="color:#a6e22e">_type</span> <span style="color:#75715e">// offset to *_rtype in previous module
+</span><span style="color:#75715e"></span>
+	<span style="color:#a6e22e">bad</span> <span style="color:#66d9ef">bool</span> <span style="color:#75715e">// module failed to load and should be ignored
+</span><span style="color:#75715e"></span>
+	<span style="color:#a6e22e">next</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">moduledata</span>
 }
-</code></pre>
-
-<p>The moduledata structure has been relatively stable in the last few releases of
+</code></pre></div><p>The moduledata structure has been relatively stable in the last few releases of
 the Go compiler. In version <em>1.8</em> the field <code>textsectmap</code> was added which means
 the offset for the <code>typelinks</code> slice is different between 1.7 and 1.8+, the
 moduledata structure for 1.7 is shown below, otherwise, it has been unchanged.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">moduledata</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">pclntable</span>    []<span style="color:#66d9ef">byte</span>
+	<span style="color:#a6e22e">ftab</span>         []<span style="color:#a6e22e">functab</span>
+	<span style="color:#a6e22e">filetab</span>      []<span style="color:#66d9ef">uint32</span>
+	<span style="color:#a6e22e">findfunctab</span>  <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">minpc</span>, <span style="color:#a6e22e">maxpc</span> <span style="color:#66d9ef">uintptr</span>
 
-<pre><code class="language-go">type moduledata struct {
-	pclntable    []byte
-	ftab         []functab
-	filetab      []uint32
-	findfunctab  uintptr
-	minpc, maxpc uintptr
+	<span style="color:#a6e22e">text</span>, <span style="color:#a6e22e">etext</span>           <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">noptrdata</span>, <span style="color:#a6e22e">enoptrdata</span> <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">data</span>, <span style="color:#a6e22e">edata</span>           <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">bss</span>, <span style="color:#a6e22e">ebss</span>             <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">noptrbss</span>, <span style="color:#a6e22e">enoptrbss</span>   <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">end</span>, <span style="color:#a6e22e">gcdata</span>, <span style="color:#a6e22e">gcbss</span>    <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">types</span>, <span style="color:#a6e22e">etypes</span>         <span style="color:#66d9ef">uintptr</span>
 
-	text, etext           uintptr
-	noptrdata, enoptrdata uintptr
-	data, edata           uintptr
-	bss, ebss             uintptr
-	noptrbss, enoptrbss   uintptr
-	end, gcdata, gcbss    uintptr
-	types, etypes         uintptr
+	<span style="color:#a6e22e">typelinks</span> []<span style="color:#66d9ef">int32</span> <span style="color:#75715e">// offsets from types
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">itablinks</span> []<span style="color:#f92672">*</span><span style="color:#a6e22e">itab</span>
 
-	typelinks []int32 // offsets from types
-	itablinks []*itab
+	<span style="color:#a6e22e">modulename</span>   <span style="color:#66d9ef">string</span>
+	<span style="color:#a6e22e">modulehashes</span> []<span style="color:#a6e22e">modulehash</span>
 
-	modulename   string
-	modulehashes []modulehash
+	<span style="color:#a6e22e">gcdatamask</span>, <span style="color:#a6e22e">gcbssmask</span> <span style="color:#a6e22e">bitvector</span>
 
-	gcdatamask, gcbssmask bitvector
-
-	typemap map[typeOff]*_type // offset to *_rtype in previous module
-
-	next *moduledata
+	<span style="color:#a6e22e">typemap</span> <span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">typeOff</span>]<span style="color:#f92672">*</span><span style="color:#a6e22e">_type</span> <span style="color:#75715e">// offset to *_rtype in previous module
+</span><span style="color:#75715e"></span>
+	<span style="color:#a6e22e">next</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">moduledata</span>
 }
-</code></pre>
-
-<p>All the type-information is located in the <code>types</code> data. The <code>types</code> data not
+</code></pre></div><p>All the type-information is located in the <code>types</code> data. The <code>types</code> data not
 only holds the type-information, but it also holds other data about the types.
 To find the type-information, the <code>typelinks</code> slice is needed. This slice holds
 offsets from the beginning of the <code>types</code> to where the information of a type is
 stored.  Unfortunately, offsets for all types are not located within this slice,
 but it is still possible to find all types using this array.</p>
-
 <h1 id="parsing-the-type-information">Parsing the type-information</h1>
-
 <p>The offsets in the <code>typelinks</code> points to a data structure that describes the
 type. The data structure is used by Go track all the different types within the
 binary. The structure is defined in three places: the compiler, the <em>reflect</em>
 package, and the <em>runtime</em> package. In the <em>runtime</em> package, the name of the
 structure is <code>_type</code> and in the <em>reflect</em> package it is called <code>rtype</code>. The
 definition of the <code>rtype</code> structure is shown below.</p>
-
-<pre><code class="language-go">type rtype struct {
-	size       uintptr
-	ptrdata    uintptr  // number of bytes in the type that can contain pointers
-	hash       uint32   // hash of type; avoids computation in hash tables
-	tflag      tflag    // extra type-information flags
-	align      uint8    // alignment of variable with this type
-	fieldAlign uint8    // alignment of struct field with this type
-	kind       uint8    // enumeration for C
-	alg        *typeAlg // algorithm table
-	gcdata     *byte    // garbage collection data
-	str        nameOff  // string form
-	ptrToThis  typeOff  // type for pointer to this type, may be zero
-}
-</code></pre>
-
-<p>As said earlier, all types in the binary have a corresponding <code>_type</code>/<code>rtype</code>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">rtype</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">size</span>       <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">ptrdata</span>    <span style="color:#66d9ef">uintptr</span>  <span style="color:#75715e">// number of bytes in the type that can contain pointers
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">hash</span>       <span style="color:#66d9ef">uint32</span>   <span style="color:#75715e">// hash of type; avoids computation in hash tables
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">tflag</span>      <span style="color:#a6e22e">tflag</span>    <span style="color:#75715e">// extra type-information flags
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">align</span>      <span style="color:#66d9ef">uint8</span>    <span style="color:#75715e">// alignment of variable with this type
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">fieldAlign</span> <span style="color:#66d9ef">uint8</span>    <span style="color:#75715e">// alignment of struct field with this type
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">kind</span>       <span style="color:#66d9ef">uint8</span>    <span style="color:#75715e">// enumeration for C
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">alg</span>        <span style="color:#f92672">*</span><span style="color:#a6e22e">typeAlg</span> <span style="color:#75715e">// algorithm table
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">gcdata</span>     <span style="color:#f92672">*</span><span style="color:#66d9ef">byte</span>    <span style="color:#75715e">// garbage collection data
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">str</span>        <span style="color:#a6e22e">nameOff</span>  <span style="color:#75715e">// string form
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ptrToThis</span>  <span style="color:#a6e22e">typeOff</span>  <span style="color:#75715e">// type for pointer to this type, may be zero
+</span><span style="color:#75715e"></span>}
+</code></pre></div><p>As said earlier, all types in the binary have a corresponding <code>_type</code>/<code>rtype</code>
 structure. This includes all the primitive types and user-defined types.  The
 kind field is an <em>enum</em> value corresponding to the underlying primitive type. All
 the possible options are shown below.</p>
-
-<pre><code class="language-go">const (
-	Invalid Kind = iota
-	Bool
-	Int
-	Int8
-	Int16
-	Int32
-	Int64
-	Uint
-	Uint8
-	Uint16
-	Uint32
-	Uint64
-	Uintptr
-	Float32
-	Float64
-	Complex64
-	Complex128
-	Array
-	Chan
-	Func
-	Interface
-	Map
-	Ptr
-	Slice
-	String
-	Struct
-	UnsafePointer
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">const</span> (
+	<span style="color:#a6e22e">Invalid</span> <span style="color:#a6e22e">Kind</span> = <span style="color:#66d9ef">iota</span>
+	<span style="color:#a6e22e">Bool</span>
+	<span style="color:#a6e22e">Int</span>
+	<span style="color:#a6e22e">Int8</span>
+	<span style="color:#a6e22e">Int16</span>
+	<span style="color:#a6e22e">Int32</span>
+	<span style="color:#a6e22e">Int64</span>
+	<span style="color:#a6e22e">Uint</span>
+	<span style="color:#a6e22e">Uint8</span>
+	<span style="color:#a6e22e">Uint16</span>
+	<span style="color:#a6e22e">Uint32</span>
+	<span style="color:#a6e22e">Uint64</span>
+	<span style="color:#a6e22e">Uintptr</span>
+	<span style="color:#a6e22e">Float32</span>
+	<span style="color:#a6e22e">Float64</span>
+	<span style="color:#a6e22e">Complex64</span>
+	<span style="color:#a6e22e">Complex128</span>
+	<span style="color:#a6e22e">Array</span>
+	<span style="color:#a6e22e">Chan</span>
+	<span style="color:#a6e22e">Func</span>
+	<span style="color:#a6e22e">Interface</span>
+	<span style="color:#a6e22e">Map</span>
+	<span style="color:#a6e22e">Ptr</span>
+	<span style="color:#a6e22e">Slice</span>
+	<span style="color:#a6e22e">String</span>
+	<span style="color:#a6e22e">Struct</span>
+	<span style="color:#a6e22e">UnsafePointer</span>
 )
-</code></pre>
-
-<p>Another interesting field is <code>str</code>. This value is an offset from the beginning
+</code></pre></div><p>Another interesting field is <code>str</code>. This value is an offset from the beginning
 of the <em>types</em> data to where a packed byte structure exists with the type&rsquo;s
 name and other string information. For example, the primitive type <code>Int</code> will
 also have the name of <code>int</code>, but derived types are different. Say you have
 defined a type <code>superInt</code> as below. Its name would be <em>superInt</em> while the kind
 enum is an <code>Int</code>.</p>
-
-<pre><code class="language-go">type superInt int
-</code></pre>
-
-<p>The <code>tflag</code> field is a bitmask that is used to inform about potentially other
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">superInt</span> <span style="color:#66d9ef">int</span>
+</code></pre></div><p>The <code>tflag</code> field is a bitmask that is used to inform about potentially other
 data after the structure as described in the source code snippet shown below.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// tflag is used by an rtype to signal what extra type-information is
+</span><span style="color:#75715e">// available in the memory directly following the rtype value.
+</span><span style="color:#75715e">//
+</span><span style="color:#75715e">// tflag values must be kept in sync with copies in:
+</span><span style="color:#75715e">//	cmd/compile/internal/gc/reflect.go
+</span><span style="color:#75715e">//	cmd/link/internal/ld/decodesym.go
+</span><span style="color:#75715e">//	runtime/type.go
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">tflag</span> <span style="color:#66d9ef">uint8</span>
 
-<pre><code class="language-go">// tflag is used by an rtype to signal what extra type-information is
-// available in the memory directly following the rtype value.
-//
-// tflag values must be kept in sync with copies in:
-//	cmd/compile/internal/gc/reflect.go
-//	cmd/link/internal/ld/decodesym.go
-//	runtime/type.go
-type tflag uint8
+<span style="color:#66d9ef">const</span> (
+	<span style="color:#75715e">// tflagUncommon means that there is a pointer, *uncommonType,
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// just beyond the outer type structure.
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">//
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// For example, if t.Kind() == Struct and t.tflag&amp;tflagUncommon != 0,
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// then t has uncommonType data and it can be accessed as:
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">//
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">//	type tUncommon struct {
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">//		structType
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">//		u uncommonType
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">//	}
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">//	u := &amp;(*tUncommon)(unsafe.Pointer(t)).u
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">tflagUncommon</span> <span style="color:#a6e22e">tflag</span> = <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">0</span>
 
-const (
-	// tflagUncommon means that there is a pointer, *uncommonType,
-	// just beyond the outer type structure.
-	//
-	// For example, if t.Kind() == Struct and t.tflag&amp;tflagUncommon != 0,
-	// then t has uncommonType data and it can be accessed as:
-	//
-	//	type tUncommon struct {
-	//		structType
-	//		u uncommonType
-	//	}
-	//	u := &amp;(*tUncommon)(unsafe.Pointer(t)).u
-	tflagUncommon tflag = 1 &lt;&lt; 0
+	<span style="color:#75715e">// tflagExtraStar means the name in the str field has an
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// extraneous &#39;*&#39; prefix. This is because for most types T in
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// a program, the type *T also exists and reusing the str data
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// saves binary size.
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">tflagExtraStar</span> <span style="color:#a6e22e">tflag</span> = <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">1</span>
 
-	// tflagExtraStar means the name in the str field has an
-	// extraneous '*' prefix. This is because for most types T in
-	// a program, the type *T also exists and reusing the str data
-	// saves binary size.
-	tflagExtraStar tflag = 1 &lt;&lt; 1
-
-	// tflagNamed means the type has a name.
-	tflagNamed tflag = 1 &lt;&lt; 2
+	<span style="color:#75715e">// tflagNamed means the type has a name.
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">tflagNamed</span> <span style="color:#a6e22e">tflag</span> = <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">2</span>
 )
-</code></pre>
-
-<h2 id="an-uncommontype">An uncommonType</h2>
-
+</code></pre></div><h2 id="an-uncommontype">An uncommonType</h2>
 <p>As mentioned in the previous section, some times can be uncommon types.  So
 what are uncommon types? It turns out that they are more common than you think.
 In Go, any type can have methods associated with it. This is done by the
 example shown below.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">T</span> <span style="color:#66d9ef">struct</span>{}
 
-<pre><code class="language-go">type T struct{}
-
-func (t T) myMethod()
-</code></pre>
-
-<p>In the code snippet, <code>myMethod</code> is method for the type <code>T</code>. This makes <code>T</code> an
+<span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">t</span> <span style="color:#a6e22e">T</span>) <span style="color:#a6e22e">myMethod</span>()
+</code></pre></div><p>In the code snippet, <code>myMethod</code> is method for the type <code>T</code>. This makes <code>T</code> an
 uncommon type. In other words, uncommon types are types with methods.</p>
-
 <p>Information about the type&rsquo;s methods is defined in the <code>uncommon</code> structure.
 As described in the section above, this structure is located right after the
 type structure. The layout of the <code>uncommonType</code> structure is shown below.  It
@@ -342,64 +312,50 @@ exported), and an offset from this structure to an array of method data
 structures.  This is the current definition of the structure as the release of
 Go 1.13beta1 and its general shape has been like this since the first release
 of Go 1.7. Versions before 1.7 have a very different look.</p>
-
-<pre><code class="language-go">type uncommonType struct {
-	pkgPath nameOff // import path; empty for built-in types like int, string
-	mcount  uint16  // number of methods
-	xcount  uint16  // number of exported methods
-	moff    uint32  // offset from this uncommontype to [mcount]method
-	_       uint32  // unused
-}
-</code></pre>
-
-<p>Go 1.7beta1 was the first release with the new design of this structure. Its
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">uncommonType</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">pkgPath</span> <span style="color:#a6e22e">nameOff</span> <span style="color:#75715e">// import path; empty for built-in types like int, string
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">mcount</span>  <span style="color:#66d9ef">uint16</span>  <span style="color:#75715e">// number of methods
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">xcount</span>  <span style="color:#66d9ef">uint16</span>  <span style="color:#75715e">// number of exported methods
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">moff</span>    <span style="color:#66d9ef">uint32</span>  <span style="color:#75715e">// offset from this uncommontype to [mcount]method
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">_</span>       <span style="color:#66d9ef">uint32</span>  <span style="color:#75715e">// unused
+</span><span style="color:#75715e"></span>}
+</code></pre></div><p>Go 1.7beta1 was the first release with the new design of this structure. Its
 <code>uncommonType</code> is shown below. It is much smaller than the current one, but it
 essentially holds the same information. This structure definition is unique and
 does not exist any binaries produced by other versions of the Go compiler.</p>
-
-<pre><code class="language-go">type uncommonType struct {
-	pkgPath nameOff // import path; empty for built-in types like int, string
-	mcount  uint16  // number of methods
-	moff    uint16  // offset from this uncommontype to [mcount]method
-}
-</code></pre>
-
-<p>The general shape of the structure was released with the release of Go
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">uncommonType</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">pkgPath</span> <span style="color:#a6e22e">nameOff</span> <span style="color:#75715e">// import path; empty for built-in types like int, string
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">mcount</span>  <span style="color:#66d9ef">uint16</span>  <span style="color:#75715e">// number of methods
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">moff</span>    <span style="color:#66d9ef">uint16</span>  <span style="color:#75715e">// offset from this uncommontype to [mcount]method
+</span><span style="color:#75715e"></span>}
+</code></pre></div><p>The general shape of the structure was released with the release of Go
 1.7beta2.  It is the same size as the current structure but the <code>xcount</code> field
 is unused.  For extracting the methods, this has no noticeable effect.</p>
-
-<pre><code class="language-go">type uncommonType struct {
-	pkgPath nameOff // import path; empty for built-in types like int, string
-	mcount  uint16  // number of methods
-	_       uint16  // unused
-	moff    uint32  // offset from this uncommontype to [mcount]method
-	_       uint32  // unused
-}
-</code></pre>
-
-<p>One of the fields in the structure, <code>moff</code>, points to an array of <code>method</code>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">uncommonType</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">pkgPath</span> <span style="color:#a6e22e">nameOff</span> <span style="color:#75715e">// import path; empty for built-in types like int, string
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">mcount</span>  <span style="color:#66d9ef">uint16</span>  <span style="color:#75715e">// number of methods
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">_</span>       <span style="color:#66d9ef">uint16</span>  <span style="color:#75715e">// unused
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">moff</span>    <span style="color:#66d9ef">uint32</span>  <span style="color:#75715e">// offset from this uncommontype to [mcount]method
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">_</span>       <span style="color:#66d9ef">uint32</span>  <span style="color:#75715e">// unused
+</span><span style="color:#75715e"></span>}
+</code></pre></div><p>One of the fields in the structure, <code>moff</code>, points to an array of <code>method</code>
 structures. The definition of this structure is shown below.</p>
-
-<pre><code class="language-go">// Method on non-interface type
-type method struct {
-	name nameOff // name of method
-	mtyp typeOff // method type (without receiver)
-	ifn  textOff // fn used in interface call (one-word receiver)
-	tfn  textOff // fn used for normal method call
-}
-</code></pre>
-
-<p>The <code>mtyp</code> field is an offset to the function type for the method. It is a
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// Method on non-interface type
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">method</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">name</span> <span style="color:#a6e22e">nameOff</span> <span style="color:#75715e">// name of method
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">mtyp</span> <span style="color:#a6e22e">typeOff</span> <span style="color:#75715e">// method type (without receiver)
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ifn</span>  <span style="color:#a6e22e">textOff</span> <span style="color:#75715e">// fn used in interface call (one-word receiver)
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">tfn</span>  <span style="color:#a6e22e">textOff</span> <span style="color:#75715e">// fn used for normal method call
+</span><span style="color:#75715e"></span>}
+</code></pre></div><p>The <code>mtyp</code> field is an offset to the function type for the method. It is a
 <code>_type/rtype</code> structure with the kind value of <code>Func</code>. More on this type later.
 Both of the <code>ifn</code> and <code>tfn</code> fields points to offsets in the <em>text</em> section of
 the binary. This where function code is located.</p>
-
 <p>When analyzing real binaries, it turns out that some methods do not have a
 method type or an offset in the text section. Below is an analysis of a binary.
 In the snippet, the method array for <code>*strconv.decimal</code> is walked and the
 values are printed. It can be seen that most of them do not have a method type
 and some of the functions do not have offsets to function code.</p>
-
 <pre><code>*strconv.decimal has 9 methods
 Method 1 name: Assign
 Function at 0x58930 and 0x58930
@@ -421,11 +377,8 @@ Function at 0x0 and 0x0
 Method 9 name: set
 Method type: func(string) bool
 Function at 0x0 and 0x0
-</code></pre>
-
-<p>The symbols in the binary, shown below, also confirms that some functions are
+</code></pre><p>The symbols in the binary, shown below, also confirms that some functions are
 missing.</p>
-
 <pre><code>0x00458720  sym.strconv.__decimal_.String
 0x00458bf0  sym.strconv.__decimal_.Assign
 0x00459130  sym.strconv.__decimal_.Shift
@@ -435,24 +388,18 @@ missing.</p>
 0x00459c10  sym.strconv.__extFloat_.ShortestDecimal
 0x0045e210  sym.type..hash.strconv.decimal
 0x0045e270  sym.type..eq.strconv.decimal
-</code></pre>
-
-<p>It turns out that the Go compiler does some
+</code></pre><p>It turns out that the Go compiler does some
 <a href="https://stackoverflow.com/questions/48688822/will-go-compilers-ignore-unused-functions">pruning</a>
 of methods that are not used. While not all information is always present, the
 name of the method is still available which can be used for further analysis.</p>
-
 <h1 id="some-of-go-types">Some of Go Types</h1>
-
 <p>Each primitive type has a corresponding data type in the runtime. All of these
 data types are structures and the <code>_type</code>/<code>rtype</code> is the first field. It is an
 anonymous field so hence embedded. This means, when parsing the type data, all
 the extra data for the specific type is usually located right after the
 <code>_type</code>/<code>rtype</code> data. The <code>kind</code> field can be used to figure out what type and
 what data will be right after the <code>_type</code>/<code>rtype</code> structure.</p>
-
 <h2 id="struct-type">Struct type</h2>
-
 <p>The <code>structType</code> data type, shown below, is used to store information about
 each type derived from the primitive <code>struct</code> type. It has two extra field,
 <code>pkgPath</code>, and <code>fields</code>. The <code>pkgPath</code> field is the import name of the package
@@ -462,65 +409,51 @@ three fields. The first one is the name of the field, the second is a pointer
 to a <code>_type</code>/<code>rtype</code> structure that can be used to determine the type of the
 field, the last is an integer that encodes the offset and if the field is
 embedded/anonymous.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// structType represents a struct type.
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">structType</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">rtype</span>
+	<span style="color:#a6e22e">pkgPath</span> <span style="color:#a6e22e">name</span>
+	<span style="color:#a6e22e">fields</span>  []<span style="color:#a6e22e">structField</span> <span style="color:#75715e">// sorted by offset
+</span><span style="color:#75715e"></span>}
 
-<pre><code class="language-go">// structType represents a struct type.
-type structType struct {
-	rtype
-	pkgPath name
-	fields  []structField // sorted by offset
+<span style="color:#75715e">// Struct field
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">structField</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">name</span>        <span style="color:#a6e22e">name</span>    <span style="color:#75715e">// name is always non-empty
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">typ</span>         <span style="color:#f92672">*</span><span style="color:#a6e22e">rtype</span>  <span style="color:#75715e">// type of field
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">offsetEmbed</span> <span style="color:#66d9ef">uintptr</span> <span style="color:#75715e">// byte offset of field&lt;&lt;1 | isEmbedded
+</span><span style="color:#75715e"></span>}
+
+<span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">f</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">structField</span>) <span style="color:#a6e22e">offset</span>() <span style="color:#66d9ef">uintptr</span> {
+	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">offsetEmbed</span> <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">1</span>
 }
 
-// Struct field
-type structField struct {
-	name        name    // name is always non-empty
-	typ         *rtype  // type of field
-	offsetEmbed uintptr // byte offset of field&lt;&lt;1 | isEmbedded
+<span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">f</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">structField</span>) <span style="color:#a6e22e">embedded</span>() <span style="color:#66d9ef">bool</span> {
+	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">offsetEmbed</span><span style="color:#f92672">&amp;</span><span style="color:#ae81ff">1</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>
 }
-
-func (f *structField) offset() uintptr {
-	return f.offsetEmbed &gt;&gt; 1
-}
-
-func (f *structField) embedded() bool {
-	return f.offsetEmbed&amp;1 != 0
-}
-</code></pre>
-
-<p>If the <code>struct</code> type has some methods attached to it, it is an uncommon type.
+</code></pre></div><p>If the <code>struct</code> type has some methods attached to it, it is an uncommon type.
 In this scenario, the uncommon data structure is right after the <code>structType</code>
 data as shown below.</p>
-
-<pre><code class="language-go">type structTypeUncommon struct {
-	structType
-	u uncommonType
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">structTypeUncommon</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">structType</span>
+	<span style="color:#a6e22e">u</span> <span style="color:#a6e22e">uncommonType</span>
 }
-</code></pre>
-
-<h2 id="pointer-type">Pointer type</h2>
-
+</code></pre></div><h2 id="pointer-type">Pointer type</h2>
 <p>Pointers to types have their own type called <code>ptrType</code>, it is shown in the
 code block below. It essentially just adds a pointer to a <code>_type</code>/<code>rtype</code> for
 the type it points to. This means, for example, <code>*int</code> and <code>*uint</code> are two
 different types and have their own <code>ptrType</code> structure stored in the binary.</p>
-
-<pre><code class="language-go">// ptrType represents a pointer type.
-type ptrType struct {
-	rtype
-	elem *rtype // pointer element (pointed at) type
-}
-</code></pre>
-
-<p>One note when it comes to methods. If a pointer receiver is used when defining
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// ptrType represents a pointer type.
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">ptrType</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">rtype</span>
+	<span style="color:#a6e22e">elem</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">rtype</span> <span style="color:#75715e">// pointer element (pointed at) type
+</span><span style="color:#75715e"></span>}
+</code></pre></div><p>One note when it comes to methods. If a pointer receiver is used when defining
 a method, as seen in the example below, the methods will be attached to <code>*myThing</code>
 and not <code>myThing</code>.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">myThing</span> <span style="color:#66d9ef">struct</span>{}
 
-<pre><code class="language-go">type myThing struct{}
-
-func (m *myThing) DoSomething()
-</code></pre>
-
-<h2 id="interface-type">Interface type</h2>
-
+<span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">myThing</span>) <span style="color:#a6e22e">DoSomething</span>()
+</code></pre></div><h2 id="interface-type">Interface type</h2>
 <p>The data structure for interfaces is simple and is shown below. It has
 essentially two additional fields. One for the import pathname and a slice of
 <code>imethod</code>. The <code>imethod</code> structure, also shown below, provides information
@@ -529,23 +462,19 @@ first field in the <code>imethod</code> structure is the name. This is the funct
 The second field is the offset to a <code>_type</code>/<code>rtype</code> structure. This structure
 is of the &ldquo;kind&rdquo; function and hence provide information about the function
 definition, i.e., types for the function arguments and return values.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// interfaceType represents an interface type.
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">interfaceType</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">rtype</span>
+	<span style="color:#a6e22e">pkgPath</span> <span style="color:#a6e22e">name</span>      <span style="color:#75715e">// import path
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">methods</span> []<span style="color:#a6e22e">imethod</span> <span style="color:#75715e">// sorted by hash
+</span><span style="color:#75715e"></span>}
 
-<pre><code class="language-go">// interfaceType represents an interface type.
-type interfaceType struct {
-	rtype
-	pkgPath name      // import path
-	methods []imethod // sorted by hash
-}
-
-// imethod represents a method on an interface type
-type imethod struct {
-	name nameOff // name of method
-	typ  typeOff // .(*FuncType) underneath
-}
-</code></pre>
-
-<h2 id="map-type">Map type</h2>
-
+<span style="color:#75715e">// imethod represents a method on an interface type
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">imethod</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">name</span> <span style="color:#a6e22e">nameOff</span> <span style="color:#75715e">// name of method
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">typ</span>  <span style="color:#a6e22e">typeOff</span> <span style="color:#75715e">// .(*FuncType) underneath
+</span><span style="color:#75715e"></span>}
+</code></pre></div><h2 id="map-type">Map type</h2>
 <p>The map type is probably the most complex structures of all the types.  It is
 shown below. It has information about a bunch of sizes that are used under the
 hood. Luckily, this is created by the compiler and the programmer has no
@@ -553,57 +482,45 @@ control over it so it can be ignored. The fields that are of interest are
 <code>key</code> and <code>elem</code>.  By parsing these values, it is possible to reconstruct the
 source code representation of the type definition. The fields are pointers to
 two <code>_type</code>/<code>rtype</code> structures and essentially corresponds to <code>map[key]elem</code>.</p>
-
-<pre><code class="language-go">// mapType represents a map type.
-type mapType struct {
-	rtype
-	key        *rtype // map key type
-	elem       *rtype // map element (value) type
-	bucket     *rtype // internal bucket structure
-	keysize    uint8  // size of key slot
-	valuesize  uint8  // size of value slot
-	bucketsize uint16 // size of bucket
-	flags      uint32
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// mapType represents a map type.
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">mapType</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">rtype</span>
+	<span style="color:#a6e22e">key</span>        <span style="color:#f92672">*</span><span style="color:#a6e22e">rtype</span> <span style="color:#75715e">// map key type
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">elem</span>       <span style="color:#f92672">*</span><span style="color:#a6e22e">rtype</span> <span style="color:#75715e">// map element (value) type
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">bucket</span>     <span style="color:#f92672">*</span><span style="color:#a6e22e">rtype</span> <span style="color:#75715e">// internal bucket structure
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">keysize</span>    <span style="color:#66d9ef">uint8</span>  <span style="color:#75715e">// size of key slot
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">valuesize</span>  <span style="color:#66d9ef">uint8</span>  <span style="color:#75715e">// size of value slot
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">bucketsize</span> <span style="color:#66d9ef">uint16</span> <span style="color:#75715e">// size of bucket
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">flags</span>      <span style="color:#66d9ef">uint32</span>
 }
-</code></pre>
-
-<h2 id="slice-and-array-type">Slice and array type</h2>
-
+</code></pre></div><h2 id="slice-and-array-type">Slice and array type</h2>
 <p>The slice and array types are very similar, both shown below. The slice type
 information is recorded in the <code>elem</code> field and for arrays, the length is stored
 in the <code>len</code> field.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// sliceType represents a slice type.
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">sliceType</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">rtype</span>
+	<span style="color:#a6e22e">elem</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">rtype</span> <span style="color:#75715e">// slice element type
+</span><span style="color:#75715e"></span>}
 
-<pre><code class="language-go">// sliceType represents a slice type.
-type sliceType struct {
-	rtype
-	elem *rtype // slice element type
+<span style="color:#75715e">// arrayType represents a fixed array type.
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">arrayType</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">rtype</span>
+	<span style="color:#a6e22e">elem</span>  <span style="color:#f92672">*</span><span style="color:#a6e22e">rtype</span> <span style="color:#75715e">// array element type
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">slice</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">rtype</span> <span style="color:#75715e">// slice type
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">len</span>   <span style="color:#66d9ef">uintptr</span>
 }
-
-// arrayType represents a fixed array type.
-type arrayType struct {
-	rtype
-	elem  *rtype // array element type
-	slice *rtype // slice type
-	len   uintptr
-}
-</code></pre>
-
-<h2 id="channel-type">Channel type</h2>
-
+</code></pre></div><h2 id="channel-type">Channel type</h2>
 <p>Similar to the array, slice, and map type, the <code>chanType</code> also has a field
 called <code>elem</code> to track what type is sent over the channel. It also has an enum
 to indicate if the channel only can receive, only send, or send and receive.</p>
-
-<pre><code class="language-go">// chanType represents a channel type.
-type chanType struct {
-	rtype
-	elem *rtype  // channel element type
-	dir  uintptr // channel direction (ChanDir)
-}
-</code></pre>
-
-<h2 id="function-type">Function type</h2>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// chanType represents a channel type.
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">chanType</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">rtype</span>
+	<span style="color:#a6e22e">elem</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">rtype</span>  <span style="color:#75715e">// channel element type
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">dir</span>  <span style="color:#66d9ef">uintptr</span> <span style="color:#75715e">// channel direction (ChanDir)
+</span><span style="color:#75715e"></span>}
+</code></pre></div><h2 id="function-type">Function type</h2>
 <p>Since functions in Go are first-class citizens, there is also a type
 definition for function types. The following code snippet is taken from the
 standard library describing the type. Since it&rsquo;s possible for all types to have
@@ -614,27 +531,23 @@ the binary. The <code>funcType</code> just has two additional fields after the
 a <code>uint16</code> for the number of function return values. The type-information for
 the function arguments and return values are stored in an array right after the
 funcType data structure.</p>
-
-<pre><code class="language-go">// funcType represents a function type.
-//
-// A *rtype for each in and out parameter is stored in an array that
-// directly follows the funcType (and possibly its uncommonType). So
-// a function type with one method, one input, and one output is:
-//
-//	struct {
-//		funcType
-//		uncommonType
-//		[2]*rtype    // [0] is in, [1] is out
-//	}
-type funcType struct {
-	rtype
-	inCount  uint16
-	outCount uint16 // top bit is set if last input parameter is ...
-}
-</code></pre>
-
-<h1 id="conclusion">Conclusion</h1>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// funcType represents a function type.
+</span><span style="color:#75715e">//
+</span><span style="color:#75715e">// A *rtype for each in and out parameter is stored in an array that
+</span><span style="color:#75715e">// directly follows the funcType (and possibly its uncommonType). So
+</span><span style="color:#75715e">// a function type with one method, one input, and one output is:
+</span><span style="color:#75715e">//
+</span><span style="color:#75715e">//	struct {
+</span><span style="color:#75715e">//		funcType
+</span><span style="color:#75715e">//		uncommonType
+</span><span style="color:#75715e">//		[2]*rtype    // [0] is in, [1] is out
+</span><span style="color:#75715e">//	}
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">funcType</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">rtype</span>
+	<span style="color:#a6e22e">inCount</span>  <span style="color:#66d9ef">uint16</span>
+	<span style="color:#a6e22e">outCount</span> <span style="color:#66d9ef">uint16</span> <span style="color:#75715e">// top bit is set if last input parameter is ...
+</span><span style="color:#75715e"></span>}
+</code></pre></div><h1 id="conclusion">Conclusion</h1>
 <p>All the types used by a Go application are stored within a <em>types</em> section inside
 the binary. By parsing this data structure, it is possible to fully recover all
 the function definitions. This includes private types and fields.</p>
@@ -659,7 +572,7 @@ the function definitions. This includes private types and fields.</p>
     
       <p>All rights reserved</p>
     
-     © 2020
+     © 2021
     
     
   </section>

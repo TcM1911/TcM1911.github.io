@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Tags on Playhouse</title>
@@ -6,22 +6,36 @@
     <description>Recent content in Tags on Playhouse</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 23 Mar 2020 18:00:00 +0000</lastBuildDate>
-    
-	<atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
-    
-    
+    <lastBuildDate>Sat, 02 Jan 2021 12:00:00 +0000</lastBuildDate><atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Go</title>
+      <title>go</title>
       <link>/tags/go/</link>
-      <pubDate>Mon, 23 Mar 2020 18:00:00 +0000</pubDate>
+      <pubDate>Sat, 02 Jan 2021 12:00:00 +0000</pubDate>
       
       <guid>/tags/go/</guid>
       <description></description>
     </item>
     
     <item>
-      <title>Go_under_the_hood</title>
+      <title>r2</title>
+      <link>/tags/r2/</link>
+      <pubDate>Sat, 02 Jan 2021 12:00:00 +0000</pubDate>
+      
+      <guid>/tags/r2/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>reverse_engineering</title>
+      <link>/tags/reverse_engineering/</link>
+      <pubDate>Sat, 02 Jan 2021 12:00:00 +0000</pubDate>
+      
+      <guid>/tags/reverse_engineering/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>go_under_the_hood</title>
       <link>/tags/go_under_the_hood/</link>
       <pubDate>Mon, 23 Mar 2020 18:00:00 +0000</pubDate>
       
@@ -30,25 +44,7 @@
     </item>
     
     <item>
-      <title>Hacks</title>
-      <link>/tags/hacks/</link>
-      <pubDate>Sun, 17 Mar 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/tags/hacks/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Keybase</title>
-      <link>/tags/keybase/</link>
-      <pubDate>Sun, 09 Feb 2020 12:00:00 +0000</pubDate>
-      
-      <guid>/tags/keybase/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Malware</title>
+      <title>malware</title>
       <link>/tags/malware/</link>
       <pubDate>Mon, 23 Mar 2020 18:00:00 +0000</pubDate>
       
@@ -57,7 +53,7 @@
     </item>
     
     <item>
-      <title>Mining</title>
+      <title>mining</title>
       <link>/tags/mining/</link>
       <pubDate>Mon, 23 Mar 2020 18:00:00 +0000</pubDate>
       
@@ -66,25 +62,16 @@
     </item>
     
     <item>
-      <title>R2</title>
-      <link>/tags/r2/</link>
-      <pubDate>Sat, 09 Jun 2018 20:37:47 +0000</pubDate>
+      <title>keybase</title>
+      <link>/tags/keybase/</link>
+      <pubDate>Sun, 09 Feb 2020 12:00:00 +0000</pubDate>
       
-      <guid>/tags/r2/</guid>
+      <guid>/tags/keybase/</guid>
       <description></description>
     </item>
     
     <item>
-      <title>Ransomware</title>
-      <link>/tags/ransomware/</link>
-      <pubDate>Sun, 06 Oct 2019 21:01:26 +0100</pubDate>
-      
-      <guid>/tags/ransomware/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Raspberry_pi</title>
+      <title>raspberry_pi</title>
       <link>/tags/raspberry_pi/</link>
       <pubDate>Sun, 09 Feb 2020 12:00:00 +0000</pubDate>
       
@@ -93,7 +80,25 @@
     </item>
     
     <item>
-      <title>Red_team</title>
+      <title>ransomware</title>
+      <link>/tags/ransomware/</link>
+      <pubDate>Sun, 06 Oct 2019 21:01:26 +0100</pubDate>
+      
+      <guid>/tags/ransomware/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>hacks</title>
+      <link>/tags/hacks/</link>
+      <pubDate>Sun, 17 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/hacks/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>red_team</title>
       <link>/tags/red_team/</link>
       <pubDate>Sun, 17 Mar 2019 00:00:00 +0000</pubDate>
       
@@ -102,16 +107,7 @@
     </item>
     
     <item>
-      <title>Reverse_engineering</title>
-      <link>/tags/reverse_engineering/</link>
-      <pubDate>Sun, 23 Jun 2019 00:00:00 +0100</pubDate>
-      
-      <guid>/tags/reverse_engineering/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Yara</title>
+      <title>yara</title>
       <link>/tags/yara/</link>
       <pubDate>Sat, 09 Jun 2018 20:37:47 +0000</pubDate>
       
