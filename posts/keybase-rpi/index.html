@@ -18,9 +18,10 @@ The goal of this blog post is to show how to set up a build environment that doe
 <meta property="og:description" content="The Raspberry Pi 4 is a nice little powerful device. The official Linux distribution for the Pi, Raspbian. Unfortunately, it doesn’t have any prebuilt binaries for Keybase. Neither are they provided by Keybase themselves. Luckily, building it from the source is relatively painless. With the new more powerful version 4 of the pi, the time it takes is somewhat reasonable.
 The goal of this blog post is to show how to set up a build environment that doesn&rsquo;t require root access to the machine." />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="/posts/keybase-rpi/" />
+<meta property="og:url" content="/posts/keybase-rpi/" /><meta property="article:section" content="posts" />
 <meta property="article:published_time" content="2020-02-09T12:00:00+00:00" />
 <meta property="article:modified_time" content="2020-02-09T12:00:00+00:00" />
+
 
 
     
@@ -55,7 +56,7 @@ The goal of this blog post is to show how to set up a build environment that doe
     <link rel="icon" type="image/png" href="../../images/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../../images/favicon-16x16.png" sizes="16x16">
 
-    <meta name="generator" content="Hugo 0.80.0" />
+    <meta name="generator" content="Hugo 0.88.1" />
   </head>
 
   <body class=" ">
@@ -76,10 +77,6 @@ The goal of this blog post is to show how to set up a build environment that doe
         
           <li class="navigation-item">
             <a class="navigation-link" href="https://go-re.tk">Go Reverse Engineering Tool Kit</a>
-          </li>
-        
-          <li class="navigation-item">
-            <a class="navigation-link" href="https://ipfs.io/ipns/gomalware.lekstu.ga">Go Malware</a>
           </li>
         
       
@@ -152,13 +149,13 @@ installed Go packages.</p>
 <h2 id="installing-keybase-daemon">Installing Keybase Daemon</h2>
 <p>Installing the Keybase daemon is straight forward and can be done with the two
 following commands:</p>
-<pre><code>go get -u -v github.com/keybase/client/go/keybase
+<pre tabindex="0"><code>go get -u -v github.com/keybase/client/go/keybase
 go install -v -tags production github.com/keybase/client/go/keybase
 </code></pre><p>If you wish to install a specific version, just navigate to
 <code>$GOPATH/src/github.com/keybase/client</code> and use <code>git</code> to <em>checkout</em> the release
 tag before executing the <code>go install</code> command. For example to install version
 5.2.0, execute:</p>
-<pre><code>go get -u -v github.com/keybase/client/go/keybase
+<pre tabindex="0"><code>go get -u -v github.com/keybase/client/go/keybase
 cd $GOPATH/src/github.com/keybase/client
 git checkout v5.2.0
 go install -v -tags production github.com/keybase/client/go/keybase
@@ -166,12 +163,12 @@ go install -v -tags production github.com/keybase/client/go/keybase
 <p>The file share functionality is provided via a <strong>fuse</strong> driver. This driver is
 also used for the <strong>git</strong> functionality. If you have fuse installed, the driver
 and git hook can be compiled and installed with the two commands below.</p>
-<pre><code>go install -v -tags production github.com/keybase/client/go/kbfs/kbfsfuse
+<pre tabindex="0"><code>go install -v -tags production github.com/keybase/client/go/kbfs/kbfsfuse
 go install -v -tags production github.com/keybase/client/go/kbfs/kbfsgit/git-remote-keybase
 </code></pre><h2 id="configure">Configure</h2>
 <p>The location where the file share is mounted can be configured with the command
 below. Use it to change the location to for example <code>$HOME/Keybase</code>.</p>
-<pre><code>keybase config set mountdir {path/to/folder}
+<pre tabindex="0"><code>keybase config set mountdir {path/to/folder}
 </code></pre><p>To run the daemons, Keybase provides <strong>systemd.service</strong> files. They are located
 in the folder <code>github.com/keybase/client/packaging/linux/systemd/</code>. To run the
 daemon and the <code>kbfs</code> service the following <em>systemd</em> files are needed:</p>
@@ -186,7 +183,7 @@ keybase binary is correct. For example in <code>keybase.service</code>, change t
 value to the right path:</p>
 <p><code>ExecStart=/path/to/keybase</code></p>
 <p>Once the paths are correct, the services can be started you can log in:</p>
-<pre><code>systemd --user daemon-reload
+<pre tabindex="0"><code>systemd --user daemon-reload
 systemd --user start keybase.service
 systemd --user start kbfs.service
 keybase login
@@ -198,17 +195,17 @@ functionality.</p>
 to the <code>$PATH</code>. To build it, <strong>yarn</strong> is also needed which can be installed
 using <strong>NPM</strong>. To perform a global package install into a folder in the home
 directory, run the following commands:</p>
-<pre><code>mkdir $HOME/.npm_global
+<pre tabindex="0"><code>mkdir $HOME/.npm_global
 echo &quot;prefix=/home/pi/.npm_global&quot;
 </code></pre><p>Add the following line the to <code>$HOME/.profile</code> and <code>source</code> the file:</p>
-<pre><code>export PATH=$PATH:$HOME/.npm_global/bin
+<pre tabindex="0"><code>export PATH=$PATH:$HOME/.npm_global/bin
 </code></pre><p>Install <code>yarn</code> by executing:</p>
-<pre><code>npm install -g yarn
+<pre tabindex="0"><code>npm install -g yarn
 </code></pre><p>As part of the GUI build, Electron is downloaded. Keybase uses <em>their own</em> file
 store to host builds. Unfortunately, they don&rsquo;t include builds for 32-bit ARM.
 This can be worked around by applying the patch below to use the Electron
 Github releases instead.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-patch" data-lang="patch">diff --git a/shared/desktop/package.desktop.tsx b/shared/desktop/package.desktop.tsx
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-patch" data-lang="patch">diff --git a/shared/desktop/package.desktop.tsx b/shared/desktop/package.desktop.tsx
 index d921e3e7c9..06efc5fd98 100644
 <span style="color:#f92672">--- a/shared/desktop/package.desktop.tsx
 </span><span style="color:#f92672"></span><span style="color:#a6e22e">+++ b/shared/desktop/package.desktop.tsx
@@ -222,12 +219,12 @@ index d921e3e7c9..06efc5fd98 100644
    },
    electronVersion: 0,
 </code></pre></div><p>Apply the patch by executing:</p>
-<pre><code>cd $GOPATH/src/github.com/keybase/client
+<pre tabindex="0"><code>cd $GOPATH/src/github.com/keybase/client
 git apply /path/to/patch/file
 </code></pre><p>After this, it is time to build the GUI. The fetching of the dependencies takes
 about 20 minutes on the Pi 4 while building the Electron package takes about 12
 minutes. To build, for example, Keybase 5.2.0 for 32-bit ARM execute:</p>
-<pre><code>cd $GOPATH/src/github.com/keybase/client/shared
+<pre tabindex="0"><code>cd $GOPATH/src/github.com/keybase/client/shared
 yarn install
 yarn run package -- --platform linux --arch armv7l --appVersion 5.2.0
 </code></pre><p>At the end of the build, the path to the release folder is printed. Copy the

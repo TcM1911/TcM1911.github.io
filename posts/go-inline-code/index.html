@@ -16,9 +16,10 @@
     <meta property="og:title" content="Tackle Inline Go Functions" />
 <meta property="og:description" content="Within the last few releases, the Go compiler has gotten better at inlining smaller functions. This can sometimes make it harder when analyzing an unknown Go binary with a disassembler. Instead of seeing a call to a documented library function, the library function&#39;s code has been &#34;merged&#34; with the caller and it is easy to waste time trying to decipher the library code when just reading the documentation would have been faster." />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="/posts/go-inline-code/" />
+<meta property="og:url" content="/posts/go-inline-code/" /><meta property="article:section" content="posts" />
 <meta property="article:published_time" content="2021-01-02T12:00:00+00:00" />
 <meta property="article:modified_time" content="2021-01-02T12:00:00+00:00" />
+
 
 
     
@@ -53,7 +54,7 @@
     <link rel="icon" type="image/png" href="../../images/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../../images/favicon-16x16.png" sizes="16x16">
 
-    <meta name="generator" content="Hugo 0.80.0" />
+    <meta name="generator" content="Hugo 0.88.1" />
   </head>
 
   <body class=" ">
@@ -74,10 +75,6 @@
         
           <li class="navigation-item">
             <a class="navigation-link" href="https://go-re.tk">Go Reverse Engineering Tool Kit</a>
-          </li>
-        
-          <li class="navigation-item">
-            <a class="navigation-link" href="https://ipfs.io/ipns/gomalware.lekstu.ga">Go Malware</a>
           </li>
         
       
@@ -129,7 +126,7 @@ function, the library function&rsquo;s code has been &ldquo;merged&rdquo; with t
 is easy to waste time trying to decipher the library code when just reading the
 documentation would have been faster. The code snippet below shows a standard
 <em>Hello World</em> example in Go.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
 
 <span style="color:#f92672">import</span> (
 	<span style="color:#e6db74">&#34;fmt&#34;</span>
@@ -143,7 +140,7 @@ there is no call to <code>fmt.Println</code>. The string to be printed is loaded
 <code>rax</code> and moved to the stack location <code>var_40h</code>. Instead of seeing a
 preparation for a call to <code>fmt.Println</code>, a preparation for <code>fmt.Fprintln</code> is
 seen.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#a6e22e">cmp</span> <span style="color:#66d9ef">rsp</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">rcx</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#ae81ff">0x10</span>]
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#a6e22e">cmp</span> <span style="color:#66d9ef">rsp</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">rcx</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#ae81ff">0x10</span>]
 <span style="color:#a6e22e">sub</span> <span style="color:#66d9ef">rsp</span>, <span style="color:#ae81ff">0x58</span>
 <span style="color:#a6e22e">lea</span> <span style="color:#66d9ef">rbp</span>, [<span style="color:#66d9ef">var_50h</span>]
 <span style="color:#a6e22e">movups</span> <span style="color:#66d9ef">xmmword</span> [<span style="color:#66d9ef">var_40h</span>], <span style="color:#66d9ef">xmm0</span>
@@ -176,7 +173,7 @@ line, we can see a call to the method <code>Seed</code> and that it takes an <co
 don&rsquo;t think it would be too much of a stretch to guess that the bit operations
 between the two calls are converting the data stored in the <code>Time</code> struct to an
 <code>int64</code>.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#a6e22e">call</span> <span style="color:#66d9ef">fcn.time.Now</span> <span style="color:#75715e">; func Now() Time
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#a6e22e">call</span> <span style="color:#66d9ef">fcn.time.Now</span> <span style="color:#75715e">; func Now() Time
 </span><span style="color:#75715e"></span><span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_8h</span>]
 <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">rsp</span>]
 <span style="color:#a6e22e">bt</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#ae81ff">0x3f</span>
@@ -198,7 +195,7 @@ between the two calls are converting the data stored in the <code>Time</code> st
 <span style="color:#a6e22e">call</span> <span style="color:#66d9ef">fcn.math_rand___Rand_.Seed</span> <span style="color:#75715e">; func (r *Rand) Seed(seed int64)
 </span></code></pre></div><p>If we take a look at the documentation for the <code>time</code> package, we can see that
 there are two methods for the <code>Time</code> struct that returns an <code>int64</code>.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">% go doc time.Time | grep int64
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">% go doc time.Time | grep int64
 func Unix<span style="color:#f92672">(</span>sec int64, nsec int64<span style="color:#f92672">)</span> Time
 func <span style="color:#f92672">(</span>t Time<span style="color:#f92672">)</span> Unix<span style="color:#f92672">()</span> int64
 func <span style="color:#f92672">(</span>t Time<span style="color:#f92672">)</span> UnixNano<span style="color:#f92672">()</span> int64
@@ -209,12 +206,12 @@ provides a translation between source code line numbers and process counters.
 <em>GoRE</em> provides access to this table via the method <code>PCLNTab</code>. The returned
 value is a pointer to the <code>gosym.Table</code> type, as can be seen in the function
 signature below.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">f</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">GoFile</span>) <span style="color:#a6e22e">PCLNTab</span>() (<span style="color:#f92672">*</span><span style="color:#a6e22e">gosym</span>.<span style="color:#a6e22e">Table</span>, <span style="color:#66d9ef">error</span>)
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">f</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">GoFile</span>) <span style="color:#a6e22e">PCLNTab</span>() (<span style="color:#f92672">*</span><span style="color:#a6e22e">gosym</span>.<span style="color:#a6e22e">Table</span>, <span style="color:#66d9ef">error</span>)
 </code></pre></div><p>This type has a set of methods that takes an instruction offset and returns
 information from it. The snippet shown below is part of the documentation for
 two of these methods. From the offset of the instruction, we can get the
 function, filename, and line number.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Table</span>) <span style="color:#a6e22e">PCToLine</span>(<span style="color:#a6e22e">pc</span> <span style="color:#66d9ef">uint64</span>) (<span style="color:#a6e22e">file</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">line</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">fn</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Func</span>)
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Table</span>) <span style="color:#a6e22e">PCToLine</span>(<span style="color:#a6e22e">pc</span> <span style="color:#66d9ef">uint64</span>) (<span style="color:#a6e22e">file</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">line</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">fn</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Func</span>)
     <span style="color:#a6e22e">PCToLine</span> <span style="color:#a6e22e">looks</span> <span style="color:#a6e22e">up</span> <span style="color:#a6e22e">line</span> <span style="color:#a6e22e">number</span> <span style="color:#a6e22e">information</span> <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">a</span> <span style="color:#a6e22e">program</span> <span style="color:#a6e22e">counter</span>. <span style="color:#a6e22e">If</span> <span style="color:#a6e22e">there</span> <span style="color:#a6e22e">is</span>
     <span style="color:#a6e22e">no</span> <span style="color:#a6e22e">information</span>, <span style="color:#a6e22e">it</span> <span style="color:#a6e22e">returns</span> <span style="color:#a6e22e">fn</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span>.
 
@@ -230,7 +227,7 @@ iterated through. For each instruction, the filename and line number are looked
 up. If both of these values are the same as the previous instruction, the
 instruction is skipped. If either of these values is different, a comment is
 created that annotates the filename and line number.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">srcLineInfo</span>(<span style="color:#a6e22e">r2</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">r2g2</span>.<span style="color:#a6e22e">Client</span>, <span style="color:#a6e22e">file</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">gore</span>.<span style="color:#a6e22e">GoFile</span>) {
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">srcLineInfo</span>(<span style="color:#a6e22e">r2</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">r2g2</span>.<span style="color:#a6e22e">Client</span>, <span style="color:#a6e22e">file</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">gore</span>.<span style="color:#a6e22e">GoFile</span>) {
 	<span style="color:#a6e22e">fn</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">r2</span>.<span style="color:#a6e22e">GetCurrentFunction</span>()
 	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
 		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Failed to get current function: %s.\n&#34;</span>, <span style="color:#a6e22e">err</span>)
@@ -272,7 +269,7 @@ created that annotates the filename and line number.</p>
 out which function was inlined and add the line numbers, it becomes easier to
 figure this out. Except for the first and last instructions, the rest of this
 code is from the standard library.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#a6e22e">call</span> <span style="color:#66d9ef">fcn.time.Now</span> <span style="color:#75715e">; src/Lock/internal/payload/payloadutil/payloadutil.go:16
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#a6e22e">call</span> <span style="color:#66d9ef">fcn.time.Now</span> <span style="color:#75715e">; src/Lock/internal/payload/payloadutil/payloadutil.go:16
 </span><span style="color:#75715e"></span><span style="color:#66d9ef">mov</span> <span style="color:#66d9ef">rax</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">var_8h</span>]
 <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#66d9ef">qword</span> [<span style="color:#66d9ef">rsp</span>]
 <span style="color:#a6e22e">bt</span> <span style="color:#66d9ef">rcx</span>, <span style="color:#ae81ff">0x3f</span> <span style="color:#75715e">; /usr/local/go/src/time/time.go:169
@@ -297,7 +294,7 @@ code is from the standard library.</p>
 code</a> for the
 times package to figure out which function was called. Lines 167 to 173 in the
 <code>time.go</code> file is the following code:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// sec returns the time&#39;s seconds since Jan 1 year 1.
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// sec returns the time&#39;s seconds since Jan 1 year 1.
 </span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Time</span>) <span style="color:#a6e22e">sec</span>() <span style="color:#66d9ef">int64</span> {
 	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">wall</span><span style="color:#f92672">&amp;</span><span style="color:#a6e22e">hasMonotonic</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span> {
 		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">wallToInternal</span> <span style="color:#f92672">+</span> int64(<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">wall</span><span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">1</span><span style="color:#f92672">&gt;&gt;</span>(<span style="color:#a6e22e">nsecShift</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>))
@@ -305,12 +302,12 @@ times package to figure out which function was called. Lines 167 to 173 in the
 	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">ext</span>
 }
 </code></pre></div><p>Lines 162 to 165 in the same file has this code:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// nsec returns the time&#39;s nanoseconds.
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// nsec returns the time&#39;s nanoseconds.
 </span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Time</span>) <span style="color:#a6e22e">nsec</span>() <span style="color:#66d9ef">int32</span> {
 	<span style="color:#66d9ef">return</span> int32(<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">wall</span> <span style="color:#f92672">&amp;</span> <span style="color:#a6e22e">nsecMask</span>)
 }
 </code></pre></div><p>Finally, lines 1164 to 1166 has this:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">t</span> <span style="color:#a6e22e">Time</span>) <span style="color:#a6e22e">UnixNano</span>() <span style="color:#66d9ef">int64</span> {
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">t</span> <span style="color:#a6e22e">Time</span>) <span style="color:#a6e22e">UnixNano</span>() <span style="color:#66d9ef">int64</span> {
 	<span style="color:#66d9ef">return</span> (<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">unixSec</span>())<span style="color:#f92672">*</span><span style="color:#ae81ff">1e9</span> <span style="color:#f92672">+</span> int64(<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">nsec</span>())
 }
 </code></pre></div><p>With this information, it&rsquo;s straightforward to conclude that the inlined code

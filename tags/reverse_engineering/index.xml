@@ -19,7 +19,7 @@
     <item>
       <title>Time For Some Function Recovery</title>
       <link>/posts/pclntab-function-recovery/</link>
-      <pubDate>Sun, 23 Jun 2019 00:00:00 +0100</pubDate>
+      <pubDate>Sun, 23 Jun 2019 00:00:00 +0000</pubDate>
       
       <guid>/posts/pclntab-function-recovery/</guid>
       <description>Time For Some Function Recovery Binaries compiled with the Go compiler includes a large set of metadata. This metadata can be used to assist static analysis of stripped binaries. Stripped binaries, especially statically compiled, are hard to analyze. Since the symbols have been removed and the huge number of subroutines, hello world binary in Go have thousands of subroutines, it can be very time-consuming. Fortunately, the metadata in the binary can be used to reconstruct symbols and also recover information about the source code layout.</description>
@@ -28,7 +28,7 @@
     <item>
       <title>Say Hello to Moduledata</title>
       <link>/posts/hello-moduledata/</link>
-      <pubDate>Sun, 16 Jun 2019 00:00:00 +0100</pubDate>
+      <pubDate>Sun, 16 Jun 2019 00:00:00 +0000</pubDate>
       
       <guid>/posts/hello-moduledata/</guid>
       <description>Say Hello to Moduledata The moduledata structure is a data table that was first introduced in version 1.5 of Go. It is a structure that holds important information that is needed when you statically analyzing Go binaries. It records information about the layout of the executable. For ELF binaries, the structure can be found in the .noptrdata section. In PE files it is much harder to find. Sometimes it is located in the .</description>

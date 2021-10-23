@@ -1,139 +1,85 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
-  
   <url>
     <loc>/tags/go/</loc>
     <lastmod>2021-01-02T12:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/</loc>
     <lastmod>2021-01-02T12:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/posts/</loc>
     <lastmod>2021-01-02T12:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/tags/r2/</loc>
     <lastmod>2021-01-02T12:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/tags/reverse_engineering/</loc>
     <lastmod>2021-01-02T12:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/posts/go-inline-code/</loc>
     <lastmod>2021-01-02T12:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/tags/</loc>
     <lastmod>2021-01-02T12:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/posts/go-under-the-hood-orthrus/</loc>
     <lastmod>2020-03-23T18:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/tags/go_under_the_hood/</loc>
     <lastmod>2020-03-23T18:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/tags/malware/</loc>
     <lastmod>2020-03-23T18:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/tags/mining/</loc>
     <lastmod>2020-03-23T18:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/posts/keybase-rpi/</loc>
     <lastmod>2020-02-09T12:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/tags/keybase/</loc>
     <lastmod>2020-02-09T12:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/tags/raspberry_pi/</loc>
     <lastmod>2020-02-09T12:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/posts/go-under-the-hood-eris/</loc>
     <lastmod>2019-10-06T21:01:26+01:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/tags/ransomware/</loc>
     <lastmod>2019-10-06T21:01:26+01:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/posts/extracting-go-types/</loc>
-    <lastmod>2019-09-15T00:00:00+01:00</lastmod>
-  </url>
-  
-  <url>
+    <lastmod>2019-09-15T00:00:00+00:00</lastmod>
+  </url><url>
     <loc>/posts/pclntab-function-recovery/</loc>
-    <lastmod>2019-06-23T00:00:00+01:00</lastmod>
-  </url>
-  
-  <url>
+    <lastmod>2019-06-23T00:00:00+00:00</lastmod>
+  </url><url>
     <loc>/posts/hello-moduledata/</loc>
-    <lastmod>2019-06-16T00:00:00+01:00</lastmod>
-  </url>
-  
-  <url>
+    <lastmod>2019-06-16T00:00:00+00:00</lastmod>
+  </url><url>
     <loc>/posts/finger-windows-backdoor/</loc>
     <lastmod>2019-03-17T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/tags/hacks/</loc>
     <lastmod>2019-03-17T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/tags/red_team/</loc>
     <lastmod>2019-03-17T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/posts/whois-and-finger-reverse-shell/</loc>
     <lastmod>2018-09-01T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/posts/create-yara-rules-with-radare/</loc>
     <lastmod>2018-06-09T20:37:47+00:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/tags/yara/</loc>
     <lastmod>2018-06-09T20:37:47+00:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/posts/malware-analysis-using-malboxes/</loc>
     <lastmod>2018-04-30T10:59:00+01:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/categories/</loc>
   </url>
-  
 </urlset>
