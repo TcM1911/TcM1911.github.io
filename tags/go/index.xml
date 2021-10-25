@@ -6,7 +6,17 @@
     <description>Recent content in go on Playhouse</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 02 Jan 2021 12:00:00 +0000</lastBuildDate><atom:link href="/tags/go/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 25 Oct 2021 13:00:00 +0100</lastBuildDate><atom:link href="/tags/go/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Redress v1.0.0 Released</title>
+      <link>/posts/redress-v1/</link>
+      <pubDate>Mon, 25 Oct 2021 13:00:00 +0100</pubDate>
+      
+      <guid>/posts/redress-v1/</guid>
+      <description>It&amp;rsquo;s been over two years since the first public release of redress and a lot has changed since then. Redress has finally reached version 1.0. This release includes many surface and under the hood changes. One of the obvious changes is the user interface which has been rewritten to make it easier to use.
+The Go Reverse Engineering Tool Kit (GoRE) has had a lot of improvements during the last few months and redress is taking advantage of these improvements.</description>
+    </item>
+    
     <item>
       <title>Tackle Inline Go Functions</title>
       <link>/posts/go-inline-code/</link>
